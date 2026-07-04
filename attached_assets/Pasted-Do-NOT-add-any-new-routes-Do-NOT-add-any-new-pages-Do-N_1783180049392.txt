@@ -1,0 +1,122 @@
+Do NOT add any new routes.
+
+Do NOT add any new pages.
+
+Do NOT add new features.
+
+The current feature set is sufficient for Version 1.
+
+From this point forward, your task is to transform the website from a collection of implemented features into a living digital experience.
+
+Focus exclusively on polish, immersion, atmosphere, emotional pacing, and interaction quality.
+
+Priorities:
+
+1. Make the Living Field feel alive even when the visitor does nothing.
+
+- Citizens should subtly drift with intention.
+- Connections should slowly appear and disappear.
+- Small world events should happen naturally.
+- The world should never feel paused.
+
+2. Improve depth.
+
+Introduce multiple visual layers with different movement speeds.
+
+Background stars
+
+Dust
+
+Particles
+
+Citizen presences
+
+Connection threads
+
+UI
+
+Each layer should move differently to create spatial depth.
+
+3. Improve motion.
+
+Replace any generic fade transitions with cinematic movement.
+
+Navigation should feel like traveling through the same world.
+
+Not switching between pages.
+
+4. Improve emotional pacing.
+
+Delay information.
+
+Curiosity should come first.
+
+Understanding should come later.
+
+Avoid showing too much text immediately.
+
+5. Improve atmosphere.
+
+Everything should breathe.
+
+Nothing should feel static.
+
+Introduce tiny moments of surprise.
+
+Very subtle glows.
+
+Tiny pulses.
+
+Occasional movement.
+
+Soft visual rhythm.
+
+6. Improve interaction.
+
+Hovering a citizen should feel meaningful.
+
+Hovering connections should reveal relationships.
+
+Cursor movement should gently influence nearby particles.
+
+7. Improve composition.
+
+Reduce the feeling of UI panels floating on top of a background.
+
+Instead, make the interface feel embedded into the world itself.
+
+8. Improve visual storytelling.
+
+The visitor should gradually realize:
+
+These are not cards.
+
+These are not data.
+
+These are living presences.
+
+9. Polish every animation.
+
+Nothing should move linearly.
+
+Everything should feel organic.
+
+Slow acceleration.
+
+Gentle deceleration.
+
+Long breathing cycles.
+
+10. Audit the entire experience.
+
+Remove anything that feels like a conventional website.
+
+Replace it with interactions that reinforce the illusion of observing a living civilization.
+
+Do not increase feature count.
+
+Increase quality.
+
+The objective is no longer implementation.
+
+The objective is craftsmanship.

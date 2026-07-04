@@ -58,31 +58,62 @@ export function WorldCanvas() {
         style={{
           zIndex: 0,
           opacity: beat < 1 ? 0 : 1,
-          transition: "opacity 2.4s var(--ease-organic)",
+          transition: "opacity 2.8s var(--ease-organic)",
           mixBlendMode: "screen",
         }}
       />
-      {/* Dream bloom overlay — reacts to --dream-bloom */}
+
+      {/* Dream bloom — violet-rose radial when in dream district */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0"
+        style={{
+          zIndex: 1,
+          background: [
+            "radial-gradient(55% 45% at 50% 40%, color-mix(in oklab, oklch(0.66 0.18 315) calc(var(--dream-bloom) * 52%), transparent), transparent 68%)",
+            "radial-gradient(40% 35% at 30% 65%, color-mix(in oklab, oklch(0.60 0.16 280) calc(var(--dream-bloom) * 30%), transparent), transparent 60%)",
+          ].join(", "),
+          opacity: "var(--dream-bloom)",
+          transition: "opacity var(--dur-drift) var(--ease-organic)",
+          mixBlendMode: "screen",
+        }}
+      />
+
+      {/* Atmospheric haze — very faint warm center glow, always present */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0"
         style={{
           zIndex: 1,
           background:
-            "radial-gradient(60% 50% at 50% 50%, color-mix(in oklab, oklch(0.68 0.16 315) calc(var(--dream-bloom) * 45%), transparent), transparent 70%)",
-          opacity: "var(--dream-bloom)",
-          transition: "opacity var(--dur-drift) var(--ease-organic)",
+            "radial-gradient(70% 55% at 50% 50%, oklch(0.22 0.04 45 / 0.18) 0%, transparent 70%)",
           mixBlendMode: "screen",
         }}
       />
-      {/* Vignette — a permanent slight darkening at the edges */}
+
+      {/* Vignette — darkens edges so the world recedes into depth */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0"
         style={{
           zIndex: 2,
-          background:
-            "radial-gradient(120% 90% at 50% 50%, transparent 55%, oklch(0.06 0.015 265 / 0.85) 100%)",
+          background: [
+            "radial-gradient(110% 85% at 50% 50%, transparent 50%, oklch(0.05 0.012 265 / 0.92) 100%)",
+          ].join(", "),
+        }}
+      />
+
+      {/* Film grain — ultra-subtle texture that breaks up the flatness */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0"
+        style={{
+          zIndex: 2,
+          opacity: 0.028,
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          backgroundSize: "256px 256px",
+          mixBlendMode: "overlay",
         }}
       />
     </>

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 
 import { Veil } from "@/components/surface/Veil";
 import { EVENTS } from "@/data/events";
@@ -51,8 +52,18 @@ function Archive() {
         <ol className="relative space-y-10 border-l pl-8"
           style={{ borderColor: "color-mix(in oklab, var(--parchment) 10%, transparent)" }}
         >
-          {EVENTS.map((e) => (
-            <li key={e.id} className="relative">
+          {EVENTS.map((e, i) => (
+            <motion.li
+              key={e.id}
+              className="relative"
+              initial={{ opacity: 0, x: -8, filter: "blur(4px)" }}
+              animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+              transition={{
+                duration: 1.2,
+                delay: i * 0.055,
+                ease: [0.22, 0.61, 0.36, 1],
+              }}
+            >
               <span
                 aria-hidden
                 className="absolute -left-[37px] top-2 h-2.5 w-2.5 rotate-45"
@@ -65,23 +76,35 @@ function Archive() {
                         : "var(--parchment-dim)",
                   boxShadow:
                     e.weight === "consequential"
-                      ? "0 0 12px color-mix(in oklab, var(--ember) 60%, transparent)"
+                      ? "0 0 14px color-mix(in oklab, var(--ember) 65%, transparent), 0 0 28px color-mix(in oklab, var(--ember) 30%, transparent)"
                       : "none",
                 }}
               />
               <p
                 className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
-                style={{ color: "var(--parchment-dim)" }}
+                style={{ color: "var(--parchment-dim)", opacity: 0.55 }}
               >
-                day {String(e.day).padStart(3, "0")} · cycle {e.cycle} · {e.weight}
+                day {String(e.day).padStart(3, "0")} · cycle {e.cycle}
+                <span style={{
+                  color: e.weight === "consequential" ? "var(--ember)" : "var(--parchment-dim)",
+                  opacity: e.weight === "consequential" ? 0.8 : 0.4,
+                }}>
+                  {" "}· {e.weight}
+                </span>
               </p>
               <p
-                className="mt-2 font-display text-xl leading-[1.4]"
-                style={{ color: "var(--parchment)" }}
+                className="mt-2 font-display text-xl leading-[1.42]"
+                style={{
+                  color: e.weight === "consequential"
+                    ? "var(--parchment)"
+                    : e.weight === "notable"
+                      ? "color-mix(in oklab, var(--parchment) 88%, transparent)"
+                      : "color-mix(in oklab, var(--parchment) 65%, transparent)",
+                }}
               >
                 {e.text}
               </p>
-            </li>
+            </motion.li>
           ))}
         </ol>
       </div>

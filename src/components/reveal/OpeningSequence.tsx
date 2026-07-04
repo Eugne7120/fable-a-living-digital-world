@@ -42,17 +42,42 @@ export function OpeningSequence() {
             className="pointer-events-none fixed inset-0 z-15 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: beat >= 1 ? 1 : 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.8, ease: [0.22, 0.61, 0.36, 1] }}
+            exit={{ opacity: 0, scale: 0.96, filter: "blur(8px)" }}
+            transition={{ duration: 2.0, ease: [0.22, 0.61, 0.36, 1] }}
           >
+            {/* Outer halo — slower, larger, more transparent */}
             <div
               aria-hidden
-              className="h-2 w-2 rounded-full"
+              className="absolute rounded-full"
+              style={{
+                width: "80px",
+                height: "80px",
+                background: "radial-gradient(circle, color-mix(in oklab, var(--ember) 18%, transparent) 0%, transparent 70%)",
+                animation: beat >= 1 ? "fable-breath 6s cubic-bezier(0.4, 0, 0.2, 1) infinite" : "none",
+                animationDelay: "0.3s",
+              }}
+            />
+            {/* Inner halo */}
+            <div
+              aria-hidden
+              className="absolute rounded-full"
+              style={{
+                width: "32px",
+                height: "32px",
+                background: "radial-gradient(circle, color-mix(in oklab, var(--ember) 35%, transparent) 0%, transparent 70%)",
+                animation: beat >= 1 ? "fable-breath 4.8s cubic-bezier(0.4, 0, 0.2, 1) infinite" : "none",
+              }}
+            />
+            {/* Core */}
+            <div
+              aria-hidden
+              className="relative h-2 w-2 rounded-full"
               style={{
                 background: "var(--ember)",
                 boxShadow:
-                  "0 0 24px color-mix(in oklab, var(--ember) 60%, transparent), 0 0 80px color-mix(in oklab, var(--ember) 30%, transparent)",
-                animation: beat >= 1 ? "fable-breath 4.2s var(--ease-breath) infinite" : "none",
+                  "0 0 20px color-mix(in oklab, var(--ember) 70%, transparent), 0 0 60px color-mix(in oklab, var(--ember) 35%, transparent)",
+                animation: beat >= 1 ? "fable-breath 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite" : "none",
+                animationDelay: "0.15s",
               }}
             />
           </motion.div>

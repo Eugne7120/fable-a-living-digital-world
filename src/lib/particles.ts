@@ -1,22 +1,43 @@
 // FABLE — Particle Field (Canvas 2D)
 //
-// A single persistent engine. It reads its state each frame from the
-// atmosphere CSS variables on documentElement (density, hue, camera, etc.)
-// so the World feels continuous while route changes shift its mood.
+// Architecture: five depth layers rendered back-to-front.
 //
-// Architected so a WebGL/Three.js implementation can replace this later
-// without touching consumers: the public API is start/stop/setCursor/dispose.
+//   0 Stars       — fixed positions, no camera movement, infinitely distant
+//   1 Dust        — slow drift, 20% camera parallax, atmospheric haze
+//   2 Ambient     — the main particle field, full camera movement
+//   3 Presences   — citizen entities: breathing halos, intentional drift
+//   4 Threads     — bond-strength connections that form and dissolve over time
+//   5 Pulses      — spontaneous world-event ripples from citizens
+//
+// The engine reads its state each frame from atmosphere CSS variables so
+// the world drifts continuously between district moods without any reset.
 
 import { CITIZENS } from "@/data/citizens";
 
-type Particle = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type Star = {
+  nx: number;  // normalized position 0-1 (remapped to viewport each frame)
+  ny: number;
   r: number;
-  a: number;      // base alpha
-  phase: number;  // for shimmer
+  a: number;
+  phase: number;
+  twinkleSpeed: number;
+};
+
+type Dust = {
+  x: number; y: number;
+  vx: number; vy: number;
+  r: number; a: number;
+  phase: number; hue: number;
+};
+
+type Particle = {
+  x: number; y: number;
+  vx: number; vy: number;
+  r: number;
+  a: number;
+  phase: number;
   hue: number;
 };
 
@@ -24,23 +45,44 @@ type Presence = {
   id: string;
   hue: number;
   intensity: number;
-  x: number;
-  y: number;
-  tx: number;
-  ty: number;
+  x: number; y: number;
+  tx: number; ty: number;
   ties: string[];
-  next: number; // when to pick a new target
+  next: number;
+  breathPhase: number;  // unique breathing offset per citizen
+  pulseEmit: number;    // when this citizen last emitted a pulse
+};
+
+type Bond = {
+  a: string;  // citizen id
+  b: string;
+  strength: number;  // 0-1, grows when near, decays when far
+};
+
+type Pulse = {
+  x: number; y: number;
+  r: number;
+  maxR: number;
+  alpha: number;
+  hue: number;
+  born: number;
 };
 
 type FieldOptions = {
   reducedMotion: boolean;
 };
 
+// ─── Engine ──────────────────────────────────────────────────────────────────
+
 export class ParticleField {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private stars: Star[] = [];
+  private dust: Dust[] = [];
   private particles: Particle[] = [];
   private presences: Presence[] = [];
+  private bonds: Bond[] = [];
+  private pulses: Pulse[] = [];
   private w = 0;
   private h = 0;
   private dpr = 1;
@@ -50,8 +92,9 @@ export class ParticleField {
   private t0 = 0;
   private lastT = 0;
   private reducedMotion = false;
-  private baseCount = 220;
+  private baseCount = 180;
   private root: HTMLElement;
+  private nextWorldEvent = 0; // when to emit next world pulse
 
   constructor(canvas: HTMLCanvasElement, opts: FieldOptions) {
     this.canvas = canvas;
@@ -65,15 +108,38 @@ export class ParticleField {
   }
 
   private seed() {
-    // Cap on small screens for perf. Base count is scaled each frame by
-    // --field-density (which can climb above 1). We seed to the maximum ever
-    // needed so tick can safely slice a subset.
     const area = Math.max(1, this.w * this.h);
-    this.baseCount = Math.min(200, Math.max(70, Math.round(area / 10000)));
-    const maxCount = Math.ceil(this.baseCount * 1.5);
-    this.particles = new Array(maxCount).fill(0).map(() => this.newParticle());
+    this.baseCount = Math.min(180, Math.max(60, Math.round(area / 11000)));
 
-    // Citizen presences — the brighter, deliberate movers.
+    // Stars — many, tiny, barely move, drawn outside camera transform
+    const starCount = Math.min(320, Math.max(120, Math.round(area / 8000)));
+    this.stars = Array.from({ length: starCount }, () => ({
+      nx: Math.random(),
+      ny: Math.random(),
+      r: 0.15 + Math.random() * 0.45,
+      a: 0.06 + Math.random() * 0.18,
+      phase: Math.random() * Math.PI * 2,
+      twinkleSpeed: 0.2 + Math.random() * 0.6,
+    }));
+
+    // Dust — slow haze, partial parallax
+    const dustCount = Math.min(100, Math.max(30, Math.round(area / 20000)));
+    this.dust = Array.from({ length: dustCount }, () => ({
+      x: Math.random() * this.w,
+      y: Math.random() * this.h,
+      vx: (Math.random() - 0.5) * 0.025,
+      vy: (Math.random() - 0.5) * 0.025,
+      r: 0.8 + Math.random() * 1.4,
+      a: 0.08 + Math.random() * 0.14,
+      phase: Math.random() * Math.PI * 2,
+      hue: 28 + Math.random() * 50,
+    }));
+
+    // Ambient particles
+    const maxCount = Math.ceil(this.baseCount * 1.5);
+    this.particles = Array.from({ length: maxCount }, () => this.newParticle());
+
+    // Citizen presences
     this.presences = CITIZENS.map((c) => ({
       id: c.id,
       hue: c.hue,
@@ -84,19 +150,36 @@ export class ParticleField {
       ty: Math.random() * this.h,
       ties: c.ties,
       next: 0,
+      breathPhase: Math.random() * Math.PI * 2,
+      pulseEmit: 0,
     }));
+
+    // Bonds — one per tie pair (deduplicated)
+    const seen = new Set<string>();
+    this.bonds = [];
+    for (const c of CITIZENS) {
+      for (const tid of c.ties) {
+        const key = [c.id, tid].sort().join(":");
+        if (!seen.has(key)) {
+          seen.add(key);
+          this.bonds.push({ a: c.id, b: tid, strength: 0 });
+        }
+      }
+    }
+
+    this.nextWorldEvent = 25 + Math.random() * 20;
   }
 
   private newParticle(): Particle {
     return {
       x: Math.random() * this.w,
       y: Math.random() * this.h,
-      vx: (Math.random() - 0.5) * 0.08,
-      vy: (Math.random() - 0.5) * 0.08,
-      r: 0.4 + Math.random() * 1.6,
-      a: 0.15 + Math.random() * 0.45,
+      vx: (Math.random() - 0.5) * 0.07,
+      vy: (Math.random() - 0.5) * 0.07,
+      r: 0.4 + Math.random() * 1.5,
+      a: 0.12 + Math.random() * 0.38,
       phase: Math.random() * Math.PI * 2,
-      hue: 30 + Math.random() * 40,
+      hue: 28 + Math.random() * 45,
     };
   }
 
@@ -130,9 +213,7 @@ export class ParticleField {
     cancelAnimationFrame(this.raf);
   }
 
-  dispose() {
-    this.stop();
-  }
+  dispose() { this.stop(); }
 
   private readAtmosphere() {
     const cs = getComputedStyle(this.root);
@@ -149,133 +230,257 @@ export class ParticleField {
 
   private tick = (now: number) => {
     if (!this.running) return;
-    const dt = Math.min(48, now - this.lastT); // clamp for tab-hidden bursts
+    const dt = Math.min(48, now - this.lastT);
     this.lastT = now;
     const T = (now - this.t0) / 1000;
 
     const atm = this.readAtmosphere();
     const rm = this.reducedMotion;
-    const speedScale = rm ? 0.05 : 1;
+    const speedScale = rm ? 0.04 : 1;
 
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.w, this.h);
 
-    // Camera transform (a subtle push/pull, not a real 3D camera)
     const cx = this.w / 2;
     const cy = this.h / 2;
     const s = atm.cameraScale;
     const ox = atm.shiftX * this.w;
     const oy = atm.shiftY * this.h;
 
+    // ── Layer 0: Stars (no camera transform — infinitely distant) ─────────
+    for (const st of this.stars) {
+      const x = st.nx * this.w;
+      const y = st.ny * this.h;
+      const twinkle = 0.65 + 0.35 * Math.sin(T * st.twinkleSpeed + st.phase);
+      const alpha = st.a * twinkle * Math.min(1, atm.brightness * 0.8);
+      const hue = (35 + atm.hueShift * 0.1 + 360) % 360; // stars barely shift
+      ctx.fillStyle = `oklch(0.96 0.03 ${hue.toFixed(0)} / ${alpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(x, y, st.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ── Layer 1: Dust (20% camera parallax — very distant) ───────────────
+    ctx.save();
+    const dustParallax = 0.2;
+    ctx.translate(cx + ox * dustParallax, cy + oy * dustParallax);
+    ctx.scale(1 + (s - 1) * dustParallax, 1 + (s - 1) * dustParallax);
+    ctx.translate(-cx, -cy);
+
+    const density = Math.max(0, Math.min(1.5, atm.density));
+    for (const d of this.dust) {
+      // gentle drift
+      d.vx += Math.sin(T * 0.07 + d.phase) * 0.005;
+      d.vy += Math.cos(T * 0.06 + d.phase * 1.2) * 0.005;
+      d.vx *= 0.992;
+      d.vy *= 0.992;
+      d.x += d.vx * dt * speedScale;
+      d.y += d.vy * dt * speedScale;
+      if (d.x < -20) d.x = this.w + 20;
+      else if (d.x > this.w + 20) d.x = -20;
+      if (d.y < -20) d.y = this.h + 20;
+      else if (d.y > this.h + 20) d.y = -20;
+
+      const shimmer = 0.6 + 0.4 * Math.sin(T * 0.4 + d.phase);
+      const alpha = d.a * shimmer * density * atm.brightness * 0.7;
+      const hue = (d.hue + atm.hueShift * 0.4 + 360) % 360;
+      ctx.fillStyle = `oklch(0.82 0.06 ${hue.toFixed(1)} / ${alpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r * (1 + atm.bloom * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // ── Layer 2: Ambient particles (full camera transform) ────────────────
     ctx.save();
     ctx.translate(cx + ox, cy + oy);
     ctx.scale(s, s);
     ctx.translate(-cx, -cy);
 
-    // Ambient particles
-    const density = Math.max(0, Math.min(1.5, atm.density));
     const visibleCount = Math.min(
       this.particles.length,
       Math.floor(this.baseCount * density),
     );
     for (let i = 0; i < visibleCount; i++) {
       const p = this.particles[i];
-      // organic drift via layered sines
-      const nx = Math.sin(T * 0.13 + p.phase) * 0.05;
-      const ny = Math.cos(T * 0.11 + p.phase * 1.3) * 0.05;
-      p.vx += nx * 0.02;
-      p.vy += ny * 0.02;
+      const nx = Math.sin(T * 0.13 + p.phase) * 0.06;
+      const ny = Math.cos(T * 0.11 + p.phase * 1.3) * 0.06;
+      p.vx += nx * 0.018;
+      p.vy += ny * 0.018;
 
-      // gentle cursor attraction
+      // Cursor turbulence — orbital rather than pure attraction
       if (this.cursor.active) {
         const dx = this.cursor.x - p.x;
         const dy = this.cursor.y - p.y;
         const d2 = dx * dx + dy * dy;
-        if (d2 < 40000) {
-          const f = 0.00002 * (1 - d2 / 40000);
-          p.vx += dx * f;
-          p.vy += dy * f;
+        if (d2 < 36000) {
+          const d = Math.sqrt(d2);
+          const f = 0.000025 * (1 - d2 / 36000);
+          // Tangential component for orbital feel
+          p.vx += (dx * f + dy * f * 0.4);
+          p.vy += (dy * f - dx * f * 0.4);
         }
       }
 
-      // damping
-      p.vx *= 0.985;
-      p.vy *= 0.985;
-
+      p.vx *= 0.984;
+      p.vy *= 0.984;
       p.x += p.vx * dt * speedScale;
       p.y += p.vy * dt * speedScale;
 
-      // wrap
       if (p.x < -10) p.x = this.w + 10;
       else if (p.x > this.w + 10) p.x = -10;
       if (p.y < -10) p.y = this.h + 10;
       else if (p.y > this.h + 10) p.y = -10;
 
-      const shimmer = 0.7 + 0.3 * Math.sin(T * 1.3 + p.phase);
+      const shimmer = 0.68 + 0.32 * Math.sin(T * 1.1 + p.phase);
       const alpha = p.a * shimmer * atm.brightness;
       const hue = (p.hue + atm.hueShift + 360) % 360;
-      const light = 62 + atm.bloom * 12;
+      const light = 60 + atm.bloom * 14;
       ctx.fillStyle = `oklch(${(light / 100).toFixed(2)} 0.09 ${hue.toFixed(1)} / ${alpha.toFixed(3)})`;
-      const r = p.r * (1 + atm.bloom * 0.8);
+      const r = p.r * (1 + atm.bloom * 0.9);
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Presences (citizens)
-    const presenceScale = Math.max(0.3, Math.min(1.2, atm.density));
+    // ── Layer 3: Presences (citizens) ─────────────────────────────────────
+    const presenceScale = Math.max(0.3, Math.min(1.2, density));
+
+    // Spontaneous world event pulses
+    if (!rm && T > this.nextWorldEvent && this.presences.length > 0) {
+      const pr = this.presences[Math.floor(Math.random() * this.presences.length)];
+      const maxR = 55 + Math.random() * 40;
+      this.pulses.push({
+        x: pr.x, y: pr.y,
+        r: 0, maxR,
+        alpha: 0.55,
+        hue: (pr.hue + atm.hueShift + 360) % 360,
+        born: T,
+      });
+      this.nextWorldEvent = T + 22 + Math.random() * 30;
+    }
+
     for (let i = 0; i < this.presences.length; i++) {
       const pr = this.presences[i];
       if (i / this.presences.length > presenceScale) continue;
 
-      // pick a new target periodically
+      // Intentional movement: 40% chance of drifting toward a tied citizen
       if (T > pr.next) {
-        pr.tx = 0.1 * this.w + Math.random() * 0.8 * this.w;
-        pr.ty = 0.1 * this.h + Math.random() * 0.8 * this.h;
-        pr.next = T + 6 + Math.random() * 10;
+        const tied = pr.ties.length > 0 && Math.random() < 0.40
+          ? this.presences.find((p) => p.id === pr.ties[Math.floor(Math.random() * pr.ties.length)])
+          : null;
+
+        if (tied) {
+          // Drift toward the tied citizen but not all the way — keep space
+          const mx = tied.x + (Math.random() - 0.5) * this.w * 0.25;
+          const my = tied.y + (Math.random() - 0.5) * this.h * 0.25;
+          pr.tx = Math.max(this.w * 0.05, Math.min(this.w * 0.95, mx));
+          pr.ty = Math.max(this.h * 0.05, Math.min(this.h * 0.95, my));
+        } else {
+          pr.tx = 0.08 * this.w + Math.random() * 0.84 * this.w;
+          pr.ty = 0.08 * this.h + Math.random() * 0.84 * this.h;
+        }
+        pr.next = T + 7 + Math.random() * 12;
       }
 
       const dx = pr.tx - pr.x;
       const dy = pr.ty - pr.y;
-      pr.x += dx * 0.0008 * dt * speedScale;
-      pr.y += dy * 0.0008 * dt * speedScale;
+      pr.x += dx * 0.00075 * dt * speedScale;
+      pr.y += dy * 0.00075 * dt * speedScale;
 
       const hue = (pr.hue + atm.hueShift + 360) % 360;
-      const alpha = pr.intensity * atm.brightness * 0.85;
 
-      // glow halo
-      const rGlow = 22 + atm.bloom * 30;
+      // Breathing: slow sine wave unique to each citizen
+      const breath = 0.5 + 0.5 * Math.sin(T * 0.6 + pr.breathPhase);
+      const breathSlow = 0.5 + 0.5 * Math.sin(T * 0.25 + pr.breathPhase * 1.4);
+
+      const rGlow = (20 + atm.bloom * 28) * (0.82 + 0.18 * breath);
+      const alpha = pr.intensity * atm.brightness * (0.72 + 0.13 * breathSlow);
+
+      // Outer soft halo
+      const rOuter = rGlow * 2.2;
+      const gradOuter = ctx.createRadialGradient(pr.x, pr.y, 0, pr.x, pr.y, rOuter);
+      gradOuter.addColorStop(0, `oklch(0.78 0.12 ${hue.toFixed(1)} / ${(alpha * 0.12).toFixed(3)})`);
+      gradOuter.addColorStop(1, `oklch(0.78 0.12 ${hue.toFixed(1)} / 0)`);
+      ctx.fillStyle = gradOuter;
+      ctx.beginPath();
+      ctx.arc(pr.x, pr.y, rOuter, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner glow halo
       const grad = ctx.createRadialGradient(pr.x, pr.y, 0, pr.x, pr.y, rGlow);
-      grad.addColorStop(0, `oklch(0.82 0.15 ${hue.toFixed(1)} / ${(alpha * 0.55).toFixed(3)})`);
-      grad.addColorStop(1, `oklch(0.82 0.15 ${hue.toFixed(1)} / 0)`);
+      grad.addColorStop(0, `oklch(0.84 0.16 ${hue.toFixed(1)} / ${(alpha * 0.62).toFixed(3)})`);
+      grad.addColorStop(0.5, `oklch(0.80 0.13 ${hue.toFixed(1)} / ${(alpha * 0.28).toFixed(3)})`);
+      grad.addColorStop(1, `oklch(0.78 0.12 ${hue.toFixed(1)} / 0)`);
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(pr.x, pr.y, rGlow, 0, Math.PI * 2);
       ctx.fill();
 
-      // core
-      ctx.fillStyle = `oklch(0.9 0.14 ${hue.toFixed(1)} / ${alpha.toFixed(3)})`;
+      // Core point
+      const rCore = 1.5 + atm.bloom * 1.4 + breath * 0.4;
+      ctx.fillStyle = `oklch(0.94 0.14 ${hue.toFixed(1)} / ${(alpha * 1.15).toFixed(3)})`;
       ctx.beginPath();
-      ctx.arc(pr.x, pr.y, 1.6 + atm.bloom * 1.2, 0, Math.PI * 2);
+      ctx.arc(pr.x, pr.y, rCore, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Connection lines between tied presences (very faint)
-    ctx.lineWidth = 0.6;
-    for (const pr of this.presences) {
-      for (const tid of pr.ties) {
-        const other = this.presences.find((p) => p.id === tid);
-        if (!other) continue;
-        const dx = other.x - pr.x;
-        const dy = other.y - pr.y;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        if (d > 320) continue;
-        const a = (1 - d / 320) * 0.18 * atm.brightness;
-        const hue = (pr.hue + atm.hueShift + 360) % 360;
-        ctx.strokeStyle = `oklch(0.75 0.08 ${hue.toFixed(1)} / ${a.toFixed(3)})`;
+    // ── Layer 4: Bond threads (strength-based, form and dissolve) ─────────
+    for (const bond of this.bonds) {
+      const pa = this.presences.find((p) => p.id === bond.a);
+      const pb = this.presences.find((p) => p.id === bond.b);
+      if (!pa || !pb) continue;
+
+      const dx = pb.x - pa.x;
+      const dy = pb.y - pa.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      const maxD = 340;
+
+      // Bond grows when near, decays when far
+      if (d < maxD) {
+        bond.strength = Math.min(1, bond.strength + 0.0004 * dt);
+      } else {
+        bond.strength = Math.max(0, bond.strength - 0.00015 * dt);
+      }
+
+      if (bond.strength < 0.04 || d > maxD * 1.6) continue;
+
+      const proximityFactor = d < maxD ? 1 - d / maxD : 0;
+      const baseAlpha = bond.strength * proximityFactor * 0.22 * atm.brightness;
+      const hue = (pa.hue + atm.hueShift + 360) % 360;
+
+      // Animated thread — a subtle shimmer along the connection
+      const threadAlpha = baseAlpha * (0.7 + 0.3 * Math.sin(T * 0.8 + bond.strength * 5));
+
+      ctx.lineWidth = 0.5 + bond.strength * 0.4;
+      ctx.strokeStyle = `oklch(0.78 0.09 ${hue.toFixed(1)} / ${threadAlpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    }
+
+    // ── Layer 5: World event pulses ───────────────────────────────────────
+    if (!rm) {
+      const expandSpeed = 28;
+      for (let i = this.pulses.length - 1; i >= 0; i--) {
+        const pulse = this.pulses[i];
+        const age = T - pulse.born;
+        const maxAge = pulse.maxR / expandSpeed;
+
+        if (age > maxAge) {
+          this.pulses.splice(i, 1);
+          continue;
+        }
+
+        pulse.r = age * expandSpeed;
+        const progress = pulse.r / pulse.maxR;
+        const alpha = pulse.alpha * (1 - progress) * (1 - progress) * atm.brightness;
+
+        ctx.lineWidth = 1 - progress * 0.7;
+        ctx.strokeStyle = `oklch(0.82 0.12 ${pulse.hue.toFixed(1)} / ${alpha.toFixed(3)})`;
         ctx.beginPath();
-        ctx.moveTo(pr.x, pr.y);
-        ctx.lineTo(other.x, other.y);
+        ctx.arc(pulse.x, pulse.y, pulse.r, 0, Math.PI * 2);
         ctx.stroke();
       }
     }

@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { Veil } from "@/components/surface/Veil";
 import { CITIZENS } from "@/data/citizens";
+import type { Citizen } from "@/data/citizens";
 
 export const Route = createFileRoute("/citizens")({
   head: () => ({
@@ -22,7 +24,128 @@ export const Route = createFileRoute("/citizens")({
   component: Population,
 });
 
+function CitizenCard({
+  c,
+  hovered,
+  onEnter,
+  onLeave,
+}: {
+  c: Citizen;
+  hovered: boolean;
+  onEnter: () => void;
+  onLeave: () => void;
+}) {
+  const tiedCitizens = c.ties
+    .map((id) => CITIZENS.find((x) => x.id === id))
+    .filter(Boolean) as Citizen[];
+
+  return (
+    <li
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      onFocus={onEnter}
+      onBlur={onLeave}
+      className="relative p-6"
+      style={{
+        backgroundColor: hovered
+          ? `color-mix(in oklab, oklch(0.82 0.15 ${c.hue} / 0.07) 100%, color-mix(in oklab, var(--ink) 88%, transparent))`
+          : "color-mix(in oklab, var(--ink) 88%, transparent)",
+        borderLeft: `2px solid ${hovered
+          ? `oklch(0.82 0.15 ${c.hue} / 0.5)`
+          : "transparent"
+        }`,
+        transition:
+          "background-color 1s cubic-bezier(0.22,0.61,0.36,1), border-color 0.7s cubic-bezier(0.22,0.61,0.36,1)",
+      }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1 flex-1 min-w-0">
+          <h2
+            className="font-display text-2xl leading-none"
+            style={{ color: "var(--parchment)" }}
+          >
+            {c.name}
+          </h2>
+          <p
+            className="font-mono-fable text-[10px] uppercase tracking-[0.28em]"
+            style={{
+              color: "var(--parchment-dim)",
+              opacity: hovered ? 0.7 : 0.42,
+              transition: "opacity 0.7s cubic-bezier(0.22,0.61,0.36,1)",
+            }}
+          >
+            {c.role} · born day {c.born}
+          </p>
+        </div>
+
+        {/* Presence dot — pulses when hovered */}
+        <span
+          aria-hidden
+          className="inline-block rounded-full shrink-0 mt-0.5"
+          style={{
+            width: hovered ? "10px" : "7px",
+            height: hovered ? "10px" : "7px",
+            background: `oklch(0.82 0.15 ${c.hue})`,
+            boxShadow: hovered
+              ? `0 0 10px oklch(0.82 0.15 ${c.hue} / 0.9), 0 0 28px oklch(0.82 0.15 ${c.hue} / 0.45)`
+              : `0 0 7px oklch(0.82 0.15 ${c.hue} / 0.38)`,
+            animation: hovered
+              ? `fable-pulse-glow 3s cubic-bezier(0.4,0,0.2,1) infinite`
+              : "none",
+            transition: "width 0.6s cubic-bezier(0.22,0.61,0.36,1), height 0.6s cubic-bezier(0.22,0.61,0.36,1), box-shadow 0.8s cubic-bezier(0.22,0.61,0.36,1)",
+          }}
+        />
+      </div>
+
+      <p
+        className="mt-4 font-display text-base leading-[1.58]"
+        style={{
+          color: hovered ? "var(--parchment)" : "var(--parchment-dim)",
+          transition: "color 0.8s cubic-bezier(0.22,0.61,0.36,1)",
+        }}
+      >
+        {c.brief}
+      </p>
+
+      {tiedCitizens.length > 0 && (
+        <div
+          className="mt-5 flex flex-wrap gap-3"
+          style={{
+            opacity: hovered ? 1 : 0.3,
+            transform: hovered ? "translateY(0)" : "translateY(4px)",
+            transition:
+              "opacity 0.8s cubic-bezier(0.22,0.61,0.36,1), transform 0.8s cubic-bezier(0.22,0.61,0.36,1)",
+          }}
+        >
+          {tiedCitizens.map((tied) => (
+            <span
+              key={tied.id}
+              className="flex items-center gap-1.5 font-mono-fable text-[10px] uppercase tracking-[0.24em]"
+              style={{ color: "var(--parchment-dim)" }}
+            >
+              <span
+                aria-hidden
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{
+                  background: `oklch(0.78 0.12 ${tied.hue})`,
+                  boxShadow: hovered
+                    ? `0 0 6px oklch(0.78 0.12 ${tied.hue} / 0.8)`
+                    : "none",
+                  transition: "box-shadow 0.6s ease",
+                }}
+              />
+              {tied.name}
+            </span>
+          ))}
+        </div>
+      )}
+    </li>
+  );
+}
+
 function Population() {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
   return (
     <Veil>
       <div className="space-y-12">
@@ -52,54 +175,19 @@ function Population() {
           className="grid grid-cols-1 gap-px border sm:grid-cols-2"
           style={{
             backgroundColor:
-              "color-mix(in oklab, var(--parchment) 8%, transparent)",
+              "color-mix(in oklab, var(--parchment) 7%, transparent)",
             borderColor:
-              "color-mix(in oklab, var(--parchment) 10%, transparent)",
+              "color-mix(in oklab, var(--parchment) 9%, transparent)",
           }}
         >
           {CITIZENS.map((c) => (
-            <li
+            <CitizenCard
               key={c.id}
-              className="group p-6 drift"
-              style={{ backgroundColor: "color-mix(in oklab, var(--ink) 88%, transparent)" }}
-            >
-              <div className="flex items-baseline justify-between gap-4">
-                <h2
-                  className="font-display text-2xl leading-none"
-                  style={{ color: "var(--parchment)" }}
-                >
-                  {c.name}
-                </h2>
-                <span
-                  aria-hidden
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{
-                    background: `oklch(0.82 0.15 ${c.hue})`,
-                    boxShadow: `0 0 12px oklch(0.82 0.15 ${c.hue} / 0.6)`,
-                  }}
-                />
-              </div>
-              <p
-                className="mt-1 font-mono-fable text-[10px] uppercase tracking-[0.28em]"
-                style={{ color: "var(--parchment-dim)" }}
-              >
-                {c.role} · born day {c.born}
-              </p>
-              <p
-                className="mt-4 font-display text-base leading-[1.55]"
-                style={{ color: "var(--parchment)" }}
-              >
-                {c.brief}
-              </p>
-              {c.ties.length > 0 && (
-                <p
-                  className="mt-4 font-mono-fable text-[10px] uppercase tracking-[0.28em]"
-                  style={{ color: "var(--parchment-dim)" }}
-                >
-                  ties · {c.ties.join(" · ")}
-                </p>
-              )}
-            </li>
+              c={c}
+              hovered={hoveredId === c.id}
+              onEnter={() => setHoveredId(c.id)}
+              onLeave={() => setHoveredId((id) => (id === c.id ? null : id))}
+            />
           ))}
         </ul>
       </div>

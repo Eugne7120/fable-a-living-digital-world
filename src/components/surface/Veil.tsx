@@ -1,5 +1,10 @@
-// A translucent "veil" surface. Never a hard-edged modal — the world remains
-// faintly visible behind it. Used by every district that surfaces content.
+// A translucent "veil" surface. The world remains faintly visible behind.
+// The interface feels embedded in the world, not floating above it.
+//
+// Gradient design:
+// - Dense at top (the content emerges from the field)
+// - Thinner at the center-bottom (the world breathes through)
+// - A horizontal feathering suggests the world extends beyond the frame
 
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
@@ -16,9 +21,22 @@ export function Veil({ children, align = "start" }: VeilProps) {
     <div
       className="relative z-20 flex min-h-svh w-full flex-col px-6 pb-32 pt-24 sm:px-14 sm:pb-40 sm:pt-28"
       style={{
-        // A subtle veil that blends into the world — never opaque.
-        background:
-          "linear-gradient(180deg, color-mix(in oklab, var(--ink) calc(var(--veil-opacity) * 100%), transparent) 0%, color-mix(in oklab, var(--ink) calc(var(--veil-opacity) * 55%), transparent) 100%)",
+        // Multi-stop gradient: the content field emerges from the living world
+        // rather than sitting on top of it. Horizontal fade suggests infinity.
+        background: [
+          // Vertical: strong at top where text lives, lighter below
+          `linear-gradient(180deg,
+            color-mix(in oklab, var(--ink) calc(var(--veil-opacity) * 95%), transparent) 0%,
+            color-mix(in oklab, var(--ink) calc(var(--veil-opacity) * 80%), transparent) 35%,
+            color-mix(in oklab, var(--ink) calc(var(--veil-opacity) * 48%), transparent) 70%,
+            color-mix(in oklab, var(--ink) calc(var(--veil-opacity) * 30%), transparent) 100%)`,
+          // Horizontal: fade out at left and right edges so the world bleeds through
+          `linear-gradient(90deg,
+            color-mix(in oklab, var(--ink) calc(var(--veil-opacity) * 28%), transparent) 0%,
+            transparent 18%,
+            transparent 82%,
+            color-mix(in oklab, var(--ink) calc(var(--veil-opacity) * 22%), transparent) 100%)`,
+        ].join(", "),
         justifyContent: align === "center" ? "center" : "flex-start",
       }}
     >

@@ -177,12 +177,19 @@
 }
 
 @keyframes fable-breath {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.08); }
+  0%, 100% { opacity: 0.52; transform: scale(1); }
+  35% { opacity: 0.78; transform: scale(1.04); }
+  65% { opacity: 0.95; transform: scale(1.09); }
+}
+
+@keyframes fable-breath-slow {
+  0%, 100% { opacity: 0.45; }
+  40% { opacity: 0.72; }
+  60% { opacity: 0.82; }
 }
 
 @keyframes fable-surface {
-  0% { opacity: 0; transform: translateY(12px); filter: blur(8px); }
+  0% { opacity: 0; transform: translateY(14px); filter: blur(10px); }
   100% { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
@@ -191,6 +198,29 @@
   15% { opacity: 0.7; }
   85% { opacity: 0.7; }
   100% { opacity: 0; }
+}
+
+@keyframes fable-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 6px currentColor;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 18px currentColor, 0 0 32px currentColor;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes fable-shimmer {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.65; }
+  100% { opacity: 0.3; }
+}
+
+@keyframes fable-drift-up {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

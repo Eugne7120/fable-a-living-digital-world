@@ -55,10 +55,19 @@ export function DistrictNav() {
                     : isHover
                       ? "var(--parchment)"
                       : "var(--parchment-dim)",
-                  opacity: isActive ? 1 : isHover ? 0.95 : 0.55,
-                  transform: isActive ? "scale(1.15)" : "scale(1)",
+                  opacity: isActive ? 1 : isHover ? 0.95 : 0.5,
+                  transform: isActive
+                    ? "scale(1.18)"
+                    : isHover
+                      ? "scale(1.08)"
+                      : "scale(1)",
                   textShadow: isActive
-                    ? "0 0 12px color-mix(in oklab, var(--ember) 60%, transparent)"
+                    ? "0 0 16px color-mix(in oklab, var(--ember) 70%, transparent), 0 0 32px color-mix(in oklab, var(--ember) 35%, transparent)"
+                    : isHover
+                      ? "0 0 10px color-mix(in oklab, var(--parchment) 40%, transparent)"
+                      : "none",
+                  animation: isActive
+                    ? "fable-breath-slow 5s cubic-bezier(0.4, 0, 0.2, 1) infinite"
                     : "none",
                 }}
               >

@@ -1,8 +1,9 @@
 // Interpolates atmosphere tokens on documentElement whenever the route
 // changes, so the persistent WorldCanvas drifts between district states.
 //
-// This is the single place that decides "what does the world look like right
-// now?" — every other consumer reads the CSS variables it writes.
+// Navigation feels like traveling through the world, not switching pages:
+// the veil briefly deepens as you depart (a passage through the membrane),
+// then settles into the arrival district's atmosphere.
 
 import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
@@ -12,17 +13,27 @@ import {
   ATMOSPHERE,
   REVEAL_START,
   applyAtmosphere,
-  lerpAtmosphere,
   type Atmosphere,
 } from "@/lib/atmosphere";
 import { useWorld } from "@/lib/world-state";
-import { easing, prefersReducedMotion } from "@/lib/motion";
+import { prefersReducedMotion } from "@/lib/motion";
 
-function easeOrganic(t: number) {
-  // Approximate the cubic-bezier(0.22, 0.61, 0.36, 1)
-  const [, , x2, y2] = easing.organic;
-  void x2; void y2;
+function easeOut(t: number): number {
   return 1 - Math.pow(1 - t, 3);
+}
+
+// Slight spring overshoot for camera values — arrival feels organic, not mechanical
+function easeSpring(t: number): number {
+  return 1 - Math.pow(1 - t, 3) + Math.sin(t * Math.PI) * 0.04 * (1 - t);
+}
+
+// Veil rises above target mid-transit (the "passage" sensation), then settles
+function passageVeil(from: number, to: number, t: number): number {
+  const peak = Math.min(0.84, Math.max(from, to) + 0.20);
+  if (t < 0.38) {
+    return from + (peak - from) * easeOut(t / 0.38);
+  }
+  return peak + (to - peak) * easeOut((t - 0.38) / 0.62);
 }
 
 export function TransitionDirector() {
@@ -31,46 +42,58 @@ export function TransitionDirector() {
   const currentRef = useRef<Atmosphere>({ ...REVEAL_START });
   const rafRef = useRef(0);
 
-  // Apply reveal-start atmosphere immediately on first mount so we never
-  // flash the default field state before beat 3.
   useEffect(() => {
     applyAtmosphere(document.documentElement, currentRef.current);
   }, []);
 
   useEffect(() => {
-    // During the opening reveal (beats 0-2), the world stays hushed.
-    // From beat 3 onward, we drift toward the current district atmosphere.
     let target: Atmosphere;
     if (beat < 3) {
       target = REVEAL_START;
     } else if (beat === 3) {
-      // Halfway bloom — particles resolving out of the dark.
-      const field = ATMOSPHERE.field;
       target = {
-        ...field,
-        brightness: 0.7,
-        density: 0.55,
-        cameraScale: 0.9,
+        ...ATMOSPHERE.field,
+        brightness: 0.68,
+        density: 0.52,
+        cameraScale: 0.88,
       };
     } else {
       target = ATMOSPHERE[districtForPath(pathname).id];
     }
 
     const from = { ...currentRef.current };
-    const duration = prefersReducedMotion() ? 200 : 2200;
+    const rm = prefersReducedMotion();
+    const duration = rm ? 150 : 2400;
     const start = performance.now();
 
     cancelAnimationFrame(rafRef.current);
+
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
-      const eased = easeOrganic(t);
-      const cur = lerpAtmosphere(from, target, eased);
+      const te = easeOut(t);
+      const ts = easeSpring(t);
+      const lerp = (a: number, b: number, x: number) => a + (b - a) * x;
+
+      const cur: Atmosphere = {
+        density:     lerp(from.density,     target.density,     te),
+        hueShift:    lerp(from.hueShift,    target.hueShift,    te),
+        brightness:  lerp(from.brightness,  target.brightness,  te),
+        cameraScale: lerp(from.cameraScale, target.cameraScale, ts),
+        shiftX:      lerp(from.shiftX,      target.shiftX,      ts),
+        shiftY:      lerp(from.shiftY,      target.shiftY,      ts),
+        veil: rm
+          ? lerp(from.veil, target.veil, te)
+          : passageVeil(from.veil, target.veil, t),
+        bloom: lerp(from.bloom, target.bloom, te),
+        bed: t < 0.5 ? from.bed : target.bed,
+      };
+
       currentRef.current = cur;
       applyAtmosphere(document.documentElement, cur);
       if (t < 1) rafRef.current = requestAnimationFrame(tick);
     };
-    rafRef.current = requestAnimationFrame(tick);
 
+    rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
   }, [pathname, beat]);
 

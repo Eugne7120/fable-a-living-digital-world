@@ -48,10 +48,12 @@ These prose blocks passed the test and should never be deleted:
 All 7 districts now follow: whispered eyebrow (0.6–0.7 opacity amber) → large h1 → optional evocative prose → content.
 No body paragraph explains what the district IS. Only Citizens and Archive have eyebrow+h1 only (no body para). Dream now has eyebrow+h1+dreamer sections only — blockquote and footer stats removed.
 
-## Landing identity/intro sequence (post-launch-optimization pass)
-The Field (`/`) opening reveal is a beat machine (`RevealBeat` in world-state) that now runs 0→6: void → breath → breath fades → identity (FABLE + tagline) → world snapshot + invitations → terminal (diary/ticker/nav). Terminal-only UI (DiaryLine, EventTicker, DistrictNav, TemporalMarker) all gate on `beat >= 6`, not `>= 5` — if adding new persistent-world chrome, gate it the same way or it will collide visually with the intro identity block.
+## Landing identity/intro sequence ("The Birth of Civilization")
+The Field (`/`) opening reveal is a beat machine (`RevealBeat` in world-state, 0-8): void → first signal → universe awakens → gravitational collapse → supernova → birth of world (particles become the Living Field, citizens fade in) → identity (FABLE + tagline) → world snapshot + invitations → terminal (diary/ticker/nav). Terminal-only UI (DiaryLine, EventTicker, DistrictNav, TemporalMarker) gates on `beat >= 8` — if adding new persistent-world chrome, gate it the same way or it collides with the intro.
 
-**Why:** Crypto-audience visitors need "what is this / why different / where next" answered in ~10s without killing the atmosphere — the intro is a scripted ceremony, not a hero section, so it had to slot into the existing beat timeline rather than exist as separate landing markup.
+**Why:** Crypto-audience visitors need "what is this / why different / where next" answered in ~10s without killing the atmosphere, AND the opening should read as a civilization being born rather than a loading screen. The birth cinematic (beats 0-5) resolves by ~7.2s, within a 6-8s ceiling; landing reveal (identity/snapshot/invitations) follows at a slower, readable pace.
+
+**How it applies:** `ParticleField` (particles.ts) is itself the cinematic engine via `setBirthPhase()` — it scatters/gravitates/orbits/explodes the existing ambient particle pool rather than a separate one-off canvas, and citizen presences/bonds are hard-gated to only render once `birthPhase === "settle"`, fading in over ~1.8s. Returning visitors (`sessionStorage.fable.arrived`) skip straight to beat 8 and the field defaults to "settle" so nothing replays. `prefers-reduced-motion` swaps in a compressed timing table (`BEAT_TIMINGS_REDUCED`) that collapses the whole cinematic to a few hundred ms instead of building an alternate code path.
 
 ## External links stay out of components
 Any destination outside the app (X, GitHub, Documentation, Launch) is defined once in `src/config/links.ts` (`EXTERNAL_LINKS`, `isLinkEnabled()`). Components never hardcode URLs or "coming soon" copy — they read the config and render disabled/pending state automatically when `url` is null.

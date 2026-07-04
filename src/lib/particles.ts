@@ -17,7 +17,7 @@ import { CITIZENS } from "@/data/citizens";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Star = {
-  nx: number;  // normalized position 0-1 (remapped to viewport each frame)
+  nx: number; // normalized position 0-1 (remapped to viewport each frame)
   ny: number;
   r: number;
   a: number;
@@ -26,15 +26,21 @@ type Star = {
 };
 
 type Dust = {
-  x: number; y: number;
-  vx: number; vy: number;
-  r: number; a: number;
-  phase: number; hue: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  a: number;
+  phase: number;
+  hue: number;
 };
 
 type Particle = {
-  x: number; y: number;
-  vx: number; vy: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
   r: number;
   a: number;
   phase: number;
@@ -45,22 +51,25 @@ type Presence = {
   id: string;
   hue: number;
   intensity: number;
-  x: number; y: number;
-  tx: number; ty: number;
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
   ties: string[];
   next: number;
-  breathPhase: number;  // unique breathing offset per citizen
-  pulseEmit: number;    // when this citizen last emitted a pulse
+  breathPhase: number; // unique breathing offset per citizen
+  pulseEmit: number; // when this citizen last emitted a pulse
 };
 
 type Bond = {
-  a: string;  // citizen id
+  a: string; // citizen id
   b: string;
-  strength: number;  // 0-1, grows when near, decays when far
+  strength: number; // 0-1, grows when near, decays when far
 };
 
 type Pulse = {
-  x: number; y: number;
+  x: number;
+  y: number;
   r: number;
   maxR: number;
   alpha: number;
@@ -71,6 +80,16 @@ type Pulse = {
 type FieldOptions = {
   reducedMotion: boolean;
 };
+
+// "The Birth of Civilization" — the field doubles as the cinematic engine.
+// void/signal: field stays hidden (DOM handles the breathing point).
+// awaken: particles appear scattered, drawn gently toward the center.
+// collapse: gravitational pull strengthens, orbit spins up, core densifies.
+// supernova: particles are flung outward in a single burst.
+// settle: the burst decelerates into the ordinary ambient drift; presences
+// fade in. `settle` is also the permanent resting state for everyone who
+// has already seen the birth (returning visitors skip straight here).
+export type BirthPhase = "void" | "signal" | "awaken" | "collapse" | "supernova" | "settle";
 
 // ─── Engine ──────────────────────────────────────────────────────────────────
 
@@ -95,6 +114,9 @@ export class ParticleField {
   private baseCount = 180;
   private root: HTMLElement;
   private nextWorldEvent = 0; // when to emit next world pulse
+  private birthPhase: BirthPhase = "settle";
+  private birthPhaseStart = 0;
+  private settleStart = 0;
 
   constructor(canvas: HTMLCanvasElement, opts: FieldOptions) {
     this.canvas = canvas;
@@ -200,6 +222,44 @@ export class ParticleField {
     this.cursor.active = active;
   }
 
+  // Drives "The Birth of Civilization" cinematic. Called from the reveal
+  // beat effect; idempotent when the phase hasn't changed.
+  setBirthPhase(phase: BirthPhase) {
+    if (phase === this.birthPhase) return;
+    this.birthPhase = phase;
+    this.birthPhaseStart = performance.now();
+
+    if (phase === "awaken") {
+      // Universe awakens: scatter particles randomly across the screen so
+      // they appear to bloom into existence, then drift toward the center.
+      for (const p of this.particles) {
+        p.x = Math.random() * this.w;
+        p.y = Math.random() * this.h;
+        p.vx = 0;
+        p.vy = 0;
+        p.a = 0.1 + Math.random() * 0.35;
+      }
+    }
+
+    if (phase === "supernova") {
+      // The core collapses and bursts — every particle flung outward.
+      const cx = this.w / 2;
+      const cy = this.h / 2;
+      for (const p of this.particles) {
+        const dx = p.x - cx || Math.random() - 0.5;
+        const dy = p.y - cy || Math.random() - 0.5;
+        const d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+        const speed = 1.1 + Math.random() * 1.7;
+        p.vx = (dx / d) * speed;
+        p.vy = (dy / d) * speed;
+      }
+    }
+
+    if (phase === "settle") {
+      this.settleStart = this.birthPhaseStart;
+    }
+  }
+
   start() {
     if (this.running) return;
     this.running = true;
@@ -213,7 +273,9 @@ export class ParticleField {
     cancelAnimationFrame(this.raf);
   }
 
-  dispose() { this.stop(); }
+  dispose() {
+    this.stop();
+  }
 
   private readAtmosphere() {
     const cs = getComputedStyle(this.root);
@@ -297,10 +359,15 @@ export class ParticleField {
     ctx.scale(s, s);
     ctx.translate(-cx, -cy);
 
-    const visibleCount = Math.min(
-      this.particles.length,
-      Math.floor(this.baseCount * density),
-    );
+    const birthT = (now - this.birthPhaseStart) / 1000;
+    const isAwaken = this.birthPhase === "awaken";
+    const isCollapse = this.birthPhase === "collapse";
+    const isSupernova = this.birthPhase === "supernova";
+    const birthDense = isAwaken || isCollapse || isSupernova;
+
+    const visibleCount = birthDense
+      ? this.particles.length
+      : Math.min(this.particles.length, Math.floor(this.baseCount * density));
     for (let i = 0; i < visibleCount; i++) {
       const p = this.particles[i];
       const nx = Math.sin(T * 0.13 + p.phase) * 0.06;
@@ -317,8 +384,28 @@ export class ParticleField {
           const d = Math.sqrt(d2);
           const f = 0.000025 * (1 - d2 / 36000);
           // Tangential component for orbital feel
-          p.vx += (dx * f + dy * f * 0.4);
-          p.vy += (dy * f - dx * f * 0.4);
+          p.vx += dx * f + dy * f * 0.4;
+          p.vy += dy * f - dx * f * 0.4;
+        }
+      }
+
+      // ── Birth of Civilization forces ──────────────────────────────────
+      // Universe awakens / gravitational collapse: particles are drawn
+      // toward the center, and — as the collapse accelerates — begin to
+      // orbit, gaining tangential speed rather than falling in a straight
+      // line ("gravitational, never linear").
+      if (isAwaken || isCollapse) {
+        const dx = cx - p.x;
+        const dy = cy - p.y;
+        const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+        const ramp = Math.min(1, birthT / 1.4);
+        const pull = (isCollapse ? 0.00075 : 0.00028) * ramp;
+        p.vx += (dx / dist) * pull * dt;
+        p.vy += (dy / dist) * pull * dt;
+        if (isCollapse) {
+          const tangential = 0.00048 * ramp;
+          p.vx += (-dy / dist) * tangential * dt;
+          p.vy += (dx / dist) * tangential * dt;
         }
       }
 
@@ -344,15 +431,24 @@ export class ParticleField {
     }
 
     // ── Layer 3: Presences (citizens) ─────────────────────────────────────
+    // Citizens stay dormant through the birth cinematic and fade in only
+    // once the world has settled — "the exploded particles seamlessly
+    // become the Living Field; citizen presences fade in naturally."
+    const isSettled = this.birthPhase === "settle";
+    const sinceSettle = isSettled ? (now - this.settleStart) / 1000 : 0;
+    const presenceFadeIn = isSettled ? Math.min(1, sinceSettle / 1.8) : 0;
+
     const presenceScale = Math.max(0.3, Math.min(1.2, density));
 
     // Spontaneous world event pulses
-    if (!rm && T > this.nextWorldEvent && this.presences.length > 0) {
+    if (isSettled && !rm && T > this.nextWorldEvent && this.presences.length > 0) {
       const pr = this.presences[Math.floor(Math.random() * this.presences.length)];
       const maxR = 55 + Math.random() * 40;
       this.pulses.push({
-        x: pr.x, y: pr.y,
-        r: 0, maxR,
+        x: pr.x,
+        y: pr.y,
+        r: 0,
+        maxR,
         alpha: 0.55,
         hue: (pr.hue + atm.hueShift + 360) % 360,
         born: T,
@@ -362,13 +458,17 @@ export class ParticleField {
 
     for (let i = 0; i < this.presences.length; i++) {
       const pr = this.presences[i];
+      if (!isSettled || presenceFadeIn <= 0) continue;
       if (i / this.presences.length > presenceScale) continue;
 
       // Intentional movement: 40% chance of drifting toward a tied citizen
       if (T > pr.next) {
-        const tied = pr.ties.length > 0 && Math.random() < 0.40
-          ? this.presences.find((p) => p.id === pr.ties[Math.floor(Math.random() * pr.ties.length)])
-          : null;
+        const tied =
+          pr.ties.length > 0 && Math.random() < 0.4
+            ? this.presences.find(
+                (p) => p.id === pr.ties[Math.floor(Math.random() * pr.ties.length)],
+              )
+            : null;
 
         if (tied) {
           // Drift toward the tied citizen but not all the way — keep space
@@ -395,12 +495,15 @@ export class ParticleField {
       const breathSlow = 0.5 + 0.5 * Math.sin(T * 0.25 + pr.breathPhase * 1.4);
 
       const rGlow = (20 + atm.bloom * 28) * (0.82 + 0.18 * breath);
-      const alpha = pr.intensity * atm.brightness * (0.72 + 0.13 * breathSlow);
+      const alpha = pr.intensity * atm.brightness * (0.72 + 0.13 * breathSlow) * presenceFadeIn;
 
       // Outer soft halo
       const rOuter = rGlow * 2.2;
       const gradOuter = ctx.createRadialGradient(pr.x, pr.y, 0, pr.x, pr.y, rOuter);
-      gradOuter.addColorStop(0, `oklch(0.78 0.12 ${hue.toFixed(1)} / ${(alpha * 0.12).toFixed(3)})`);
+      gradOuter.addColorStop(
+        0,
+        `oklch(0.78 0.12 ${hue.toFixed(1)} / ${(alpha * 0.12).toFixed(3)})`,
+      );
       gradOuter.addColorStop(1, `oklch(0.78 0.12 ${hue.toFixed(1)} / 0)`);
       ctx.fillStyle = gradOuter;
       ctx.beginPath();
@@ -427,6 +530,7 @@ export class ParticleField {
 
     // ── Layer 4: Bond threads (strength-based, form and dissolve) ─────────
     for (const bond of this.bonds) {
+      if (!isSettled || presenceFadeIn <= 0) continue;
       const pa = this.presences.find((p) => p.id === bond.a);
       const pb = this.presences.find((p) => p.id === bond.b);
       if (!pa || !pb) continue;

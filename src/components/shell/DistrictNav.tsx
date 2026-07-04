@@ -9,11 +9,9 @@ export function DistrictNav() {
   const active = districtForPath(pathname);
   const { beat } = useWorld();
   const [hovered, setHovered] = useState<string | null>(null);
-  const visible = beat >= 6;
+  const visible = beat >= 8;
 
-  const currentHint = hovered
-    ? DISTRICTS.find((d) => d.id === hovered)
-    : active;
+  const currentHint = hovered ? DISTRICTS.find((d) => d.id === hovered) : active;
 
   return (
     <nav
@@ -56,11 +54,7 @@ export function DistrictNav() {
                       ? "var(--parchment)"
                       : "var(--parchment-dim)",
                   opacity: isActive ? 1 : isHover ? 0.95 : 0.5,
-                  transform: isActive
-                    ? "scale(1.18)"
-                    : isHover
-                      ? "scale(1.08)"
-                      : "scale(1)",
+                  transform: isActive ? "scale(1.18)" : isHover ? "scale(1.08)" : "scale(1)",
                   textShadow: isActive
                     ? "0 0 16px color-mix(in oklab, var(--ember) 70%, transparent), 0 0 32px color-mix(in oklab, var(--ember) 35%, transparent)"
                     : isHover

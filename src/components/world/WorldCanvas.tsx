@@ -3,9 +3,20 @@
 
 import { useEffect, useRef } from "react";
 
-import { ParticleField } from "@/lib/particles";
+import { ParticleField, type BirthPhase } from "@/lib/particles";
 import { prefersReducedMotion } from "@/lib/motion";
 import { useWorld } from "@/lib/world-state";
+
+// Beat → birth phase, driving "The Birth of Civilization" cinematic.
+// Beats 6+ (identity onward) are all part of the settled, living world.
+function birthPhaseForBeat(beat: number): BirthPhase {
+  if (beat <= 0) return "void";
+  if (beat === 1) return "signal";
+  if (beat === 2) return "awaken";
+  if (beat === 3) return "collapse";
+  if (beat === 4) return "supernova";
+  return "settle";
+}
 
 export function WorldCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -49,6 +60,12 @@ export function WorldCanvas() {
     };
   }, []);
 
+  // Drive "The Birth of Civilization" — the field itself is the cinematic
+  // engine, so it just needs to know which phase the reveal is in.
+  useEffect(() => {
+    fieldRef.current?.setBirthPhase(birthPhaseForBeat(beat));
+  }, [beat]);
+
   return (
     <>
       <canvas
@@ -57,8 +74,10 @@ export function WorldCanvas() {
         className="pointer-events-none fixed inset-0 h-full w-full"
         style={{
           zIndex: 0,
-          opacity: beat < 1 ? 0 : 1,
-          transition: "opacity 2.8s var(--ease-organic)",
+          // The universe awakens on the canvas itself (beat 2) — the void
+          // and the first signal (beats 0-1) are handled by OpeningSequence.
+          opacity: beat < 2 ? 0 : 1,
+          transition: "opacity 1.4s var(--ease-organic)",
           mixBlendMode: "screen",
         }}
       />

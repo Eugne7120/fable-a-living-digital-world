@@ -1,0 +1,88 @@
+We are no longer creating a loading screen.
+
+We are creating the birth of an entire digital civilization.
+
+Replace the current intro with a cinematic sequence called:
+
+"The Birth of Civilization"
+
+Duration:
+6–8 seconds maximum.
+Always skippable.
+Only play once per browser session.
+
+Sequence:
+
+1. Absolute Nothing
+- Completely black screen.
+- No UI.
+- No text.
+- No particles.
+- Silence.
+- Hold for ~0.8 seconds.
+
+2. First Signal
+- A single tiny amber point appears in the center.
+- It softly breathes like a heartbeat.
+- Very subtle glow.
+- A deep low-frequency ambient rumble begins.
+
+3. Universe Awakens
+- Thousands of tiny particles begin appearing randomly across the entire screen.
+- Different brightness.
+- Different sizes.
+- Different opacity.
+- They slowly become attracted toward the central amber point.
+- Motion should feel gravitational, never linear.
+
+4. Gravitational Collapse
+- Particles begin orbiting the center.
+- Rotation accelerates naturally.
+- Density increases.
+- The central core becomes brighter.
+- Ambient sound slowly intensifies.
+
+5. Supernova
+- The core collapses.
+- A beautiful energy burst expands outward.
+- Very brief white flash (under 200ms).
+- Particles explode outward organically.
+- No fire.
+- No explosion effects.
+- Pure cosmic energy.
+
+6. Birth of the World
+- The exploded particles seamlessly become the existing Living Field particle simulation.
+- Citizen presences fade in naturally.
+- Connection lines begin forming.
+- Ambient breathing resumes.
+- Camera gently settles.
+
+7. Landing Reveal
+Reveal content progressively:
+
+THE FIRST DIGITAL CIVILIZATION
+
+FABLE
+
+Persistent civilization where digital citizens remember,
+dream,
+debate,
+and evolve together.
+
+Then reveal navigation.
+
+The transition from intro to landing must feel completely seamless.
+The user should never perceive that a new page has loaded.
+
+Technical constraints:
+
+- Canvas only.
+- Reuse the existing particle engine.
+- Avoid heavy GPU shaders.
+- Maintain 60fps desktop and adaptive performance on mobile.
+- Respect prefers-reduced-motion by replacing the cinematic sequence with a simple fade-in.
+
+Creative goal:
+
+The visitor should feel that they have witnessed the birth of a civilization—not watched a website intro.

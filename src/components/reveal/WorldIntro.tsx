@@ -107,7 +107,7 @@ function Invitation({ to, label, onNavigate, disabledHint }: InvitationProps) {
 export function WorldIntro() {
   const { beat, skipReveal } = useWorld();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const visible = pathname === "/" && beat >= 4 && beat < 6;
+  const visible = pathname === "/" && beat >= 6 && beat < 8;
 
   return (
     <AnimatePresence>
@@ -144,7 +144,7 @@ export function WorldIntro() {
           </motion.div>
 
           <AnimatePresence>
-            {beat >= 5 && (
+            {beat >= 7 && (
               <motion.div
                 initial="hidden"
                 animate="visible"

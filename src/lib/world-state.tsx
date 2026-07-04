@@ -16,10 +16,16 @@ import {
 import { CITIZENS } from "@/data/citizens";
 import { DIARY, type DiaryEntry } from "@/data/diary";
 import { EVENTS, type WorldEvent } from "@/data/events";
+import { prefersReducedMotion } from "@/lib/motion";
 
-// 0 void · 1-2 breath · 3 breath fades, field visible · 4 identity (FABLE +
-// tagline) · 5 world snapshot + invitations · 6 terminal — full exploration.
-export type RevealBeat = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+// "The Birth of Civilization" — a one-time cinematic, not a loading screen.
+// 0 void · 1 first signal (a single breathing point) · 2 universe awakens
+// (particles appear, drawn toward the center) · 3 gravitational collapse
+// (orbit accelerates, core brightens) · 4 supernova (brief flash + burst) ·
+// 5 birth of world (burst becomes the Living Field, presences fade in) ·
+// 6 identity (FABLE + tagline) · 7 world snapshot + invitations ·
+// 8 terminal — full exploration.
+export type RevealBeat = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 interface WorldState {
   day: number;
@@ -42,14 +48,33 @@ interface WorldState {
 
 const WorldContext = createContext<WorldState | null>(null);
 
+// The full cinematic — void through birth-of-world — resolves by 7.2s,
+// within the 6-8s ceiling. Landing reveal (identity/snapshot/terminal)
+// follows at an unhurried, readable pace.
 const BEAT_TIMINGS: Record<RevealBeat, number> = {
   0: 0,
-  1: 1200,
-  2: 3200,
-  3: 6200,
-  4: 7200,
-  5: 9200,
-  6: 16200,
+  1: 800,
+  2: 2000,
+  3: 3600,
+  4: 5200,
+  5: 5600,
+  6: 7200,
+  7: 9200,
+  8: 16200,
+};
+
+// prefers-reduced-motion: replace the cinematic with a simple, quick fade —
+// same identity/snapshot/terminal pacing, no birth-of-civilization sequence.
+const BEAT_TIMINGS_REDUCED: Record<RevealBeat, number> = {
+  0: 0,
+  1: 60,
+  2: 120,
+  3: 180,
+  4: 240,
+  5: 300,
+  6: 900,
+  7: 2400,
+  8: 9400,
 };
 
 function pickInitialDiary() {
@@ -76,32 +101,35 @@ export function WorldProvider({ children }: { children: ReactNode }) {
   // Always start at 0 to keep SSR and client output identical; hydration-safe
   // fast-forward for returning visitors happens in the effect below.
   const [beat, setBeat] = useState<RevealBeat>(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.sessionStorage.getItem("fable.arrived") === "1") setBeat(6);
+    setReducedMotion(prefersReducedMotion());
+    if (window.sessionStorage.getItem("fable.arrived") === "1") setBeat(8);
   }, []);
 
   const beatRef = useRef(beat);
   beatRef.current = beat;
 
   useEffect(() => {
-    if (beat >= 6) return;
+    if (beat >= 8) return;
+    const timings = reducedMotion ? BEAT_TIMINGS_REDUCED : BEAT_TIMINGS;
     const next = (beat + 1) as RevealBeat;
-    const delay = BEAT_TIMINGS[next] - BEAT_TIMINGS[beat];
-    const id = setTimeout(() => setBeat(next), Math.max(400, delay));
+    const delay = timings[next] - timings[beat];
+    const id = setTimeout(() => setBeat(next), Math.max(50, delay));
     return () => clearTimeout(id);
-  }, [beat]);
+  }, [beat, reducedMotion]);
 
   useEffect(() => {
-    if (beat === 6 && typeof window !== "undefined") {
+    if (beat === 8 && typeof window !== "undefined") {
       window.sessionStorage.setItem("fable.arrived", "1");
     }
   }, [beat]);
 
   const advanceBeat = useCallback(() => {
-    setBeat((b) => (b < 6 ? ((b + 1) as RevealBeat) : b));
+    setBeat((b) => (b < 8 ? ((b + 1) as RevealBeat) : b));
   }, []);
-  const skipReveal = useCallback(() => setBeat(6), []);
+  const skipReveal = useCallback(() => setBeat(8), []);
 
   // Rotating diary entry.
   const [diaryIdx, setDiaryIdx] = useState(0);

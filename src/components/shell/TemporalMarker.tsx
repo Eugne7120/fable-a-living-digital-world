@@ -2,7 +2,7 @@ import { useWorld } from "@/lib/world-state";
 
 export function TemporalMarker() {
   const { day, cycle, beat } = useWorld();
-  const visible = beat >= 6;
+  const visible = beat >= 8;
   return (
     <div
       aria-live="polite"
@@ -16,15 +16,15 @@ export function TemporalMarker() {
       <span
         style={{
           display: "inline-block",
-          animation: visible
-            ? "fable-shimmer 8s cubic-bezier(0.4, 0, 0.2, 1) infinite"
-            : "none",
+          animation: visible ? "fable-shimmer 8s cubic-bezier(0.4, 0, 0.2, 1) infinite" : "none",
           opacity: 0.6,
         }}
       >
         day {String(day).padStart(3, "0")}
       </span>
-      <span aria-hidden className="mx-2" style={{ opacity: 0.25 }}>·</span>
+      <span aria-hidden className="mx-2" style={{ opacity: 0.25 }}>
+        ·
+      </span>
       <span style={{ opacity: 0.5 }}>cycle {cycle}</span>
     </div>
   );

@@ -2,7 +2,7 @@ import { useWorld } from "@/lib/world-state";
 
 export function TemporalMarker() {
   const { day, cycle, beat } = useWorld();
-  const visible = beat >= 4;
+  const visible = beat >= 6;
   return (
     <div
       aria-live="polite"

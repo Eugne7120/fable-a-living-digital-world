@@ -14,7 +14,7 @@ export function OpeningSequence() {
 
   // Any interaction gently nudges the reveal forward.
   useEffect(() => {
-    if (beat >= 5) return;
+    if (beat >= 6) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") skipReveal();
       else if (e.key === " " || e.key === "Enter") advanceBeat();
@@ -83,7 +83,7 @@ export function OpeningSequence() {
       </AnimatePresence>
 
       {/* Ignorable skip affordance in the corner for returning visitors */}
-      {beat < 5 && beat >= 2 && (
+      {beat < 6 && beat >= 2 && (
         <button
           type="button"
           onClick={skipReveal}

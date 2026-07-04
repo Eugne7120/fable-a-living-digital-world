@@ -17,7 +17,9 @@ import { CITIZENS } from "@/data/citizens";
 import { DIARY, type DiaryEntry } from "@/data/diary";
 import { EVENTS, type WorldEvent } from "@/data/events";
 
-export type RevealBeat = 0 | 1 | 2 | 3 | 4 | 5;
+// 0 void · 1-2 breath · 3 breath fades, field visible · 4 identity (FABLE +
+// tagline) · 5 world snapshot + invitations · 6 terminal — full exploration.
+export type RevealBeat = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 interface WorldState {
   day: number;
@@ -42,11 +44,12 @@ const WorldContext = createContext<WorldState | null>(null);
 
 const BEAT_TIMINGS: Record<RevealBeat, number> = {
   0: 0,
-  1: 1500,
-  2: 4000,
-  3: 8000,
-  4: 14000,
-  5: 0, // terminal
+  1: 1200,
+  2: 3200,
+  3: 6200,
+  4: 7200,
+  5: 9200,
+  6: 16200,
 };
 
 function pickInitialDiary() {
@@ -75,14 +78,14 @@ export function WorldProvider({ children }: { children: ReactNode }) {
   const [beat, setBeat] = useState<RevealBeat>(0);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.sessionStorage.getItem("fable.arrived") === "1") setBeat(5);
+    if (window.sessionStorage.getItem("fable.arrived") === "1") setBeat(6);
   }, []);
 
   const beatRef = useRef(beat);
   beatRef.current = beat;
 
   useEffect(() => {
-    if (beat >= 5) return;
+    if (beat >= 6) return;
     const next = (beat + 1) as RevealBeat;
     const delay = BEAT_TIMINGS[next] - BEAT_TIMINGS[beat];
     const id = setTimeout(() => setBeat(next), Math.max(400, delay));
@@ -90,15 +93,15 @@ export function WorldProvider({ children }: { children: ReactNode }) {
   }, [beat]);
 
   useEffect(() => {
-    if (beat === 5 && typeof window !== "undefined") {
+    if (beat === 6 && typeof window !== "undefined") {
       window.sessionStorage.setItem("fable.arrived", "1");
     }
   }, [beat]);
 
   const advanceBeat = useCallback(() => {
-    setBeat((b) => (b < 5 ? ((b + 1) as RevealBeat) : b));
+    setBeat((b) => (b < 6 ? ((b + 1) as RevealBeat) : b));
   }, []);
-  const skipReveal = useCallback(() => setBeat(5), []);
+  const skipReveal = useCallback(() => setBeat(6), []);
 
   // Rotating diary entry.
   const [diaryIdx, setDiaryIdx] = useState(0);

@@ -8,7 +8,7 @@ export function EventTicker() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // Only appear on the Field. District surfaces carry their own ground signal.
-  if (pathname !== "/" || beat < 5) return null;
+  if (pathname !== "/" || beat < 6) return null;
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20 flex justify-center px-6">

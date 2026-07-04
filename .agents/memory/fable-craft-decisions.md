@@ -47,3 +47,13 @@ These prose blocks passed the test and should never be deleted:
 ## District headers post-audit
 All 7 districts now follow: whispered eyebrow (0.6–0.7 opacity amber) → large h1 → optional evocative prose → content.
 No body paragraph explains what the district IS. Only Citizens and Archive have eyebrow+h1 only (no body para). Dream now has eyebrow+h1+dreamer sections only — blockquote and footer stats removed.
+
+## Landing identity/intro sequence (post-launch-optimization pass)
+The Field (`/`) opening reveal is a beat machine (`RevealBeat` in world-state) that now runs 0→6: void → breath → breath fades → identity (FABLE + tagline) → world snapshot + invitations → terminal (diary/ticker/nav). Terminal-only UI (DiaryLine, EventTicker, DistrictNav, TemporalMarker) all gate on `beat >= 6`, not `>= 5` — if adding new persistent-world chrome, gate it the same way or it will collide visually with the intro identity block.
+
+**Why:** Crypto-audience visitors need "what is this / why different / where next" answered in ~10s without killing the atmosphere — the intro is a scripted ceremony, not a hero section, so it had to slot into the existing beat timeline rather than exist as separate landing markup.
+
+## External links stay out of components
+Any destination outside the app (X, GitHub, Documentation, Launch) is defined once in `src/config/links.ts` (`EXTERNAL_LINKS`, `isLinkEnabled()`). Components never hardcode URLs or "coming soon" copy — they read the config and render disabled/pending state automatically when `url` is null.
+
+**Why:** User explicitly wants to flip links live later by editing one file, with the UI already fully designed for the disabled state (not placeholder pages).

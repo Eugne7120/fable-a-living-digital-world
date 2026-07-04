@@ -9,7 +9,7 @@ export function DistrictNav() {
   const active = districtForPath(pathname);
   const { beat } = useWorld();
   const [hovered, setHovered] = useState<string | null>(null);
-  const visible = beat >= 5;
+  const visible = beat >= 6;
 
   const currentHint = hovered
     ? DISTRICTS.find((d) => d.id === hovered)

@@ -19,6 +19,7 @@ import { SoundToggle } from "@/components/atmosphere/SoundToggle";
 import { DistrictNav } from "@/components/shell/DistrictNav";
 import { TemporalMarker } from "@/components/shell/TemporalMarker";
 import { OpeningSequence } from "@/components/reveal/OpeningSequence";
+import { WorldIntro } from "@/components/reveal/WorldIntro";
 import { DiaryLine } from "@/components/reveal/DiaryLine";
 import { EventTicker } from "@/components/reveal/EventTicker";
 import { useMounted } from "@/lib/use-mounted";
@@ -122,8 +123,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "FABLE — the first digital civilization" },
       {
         property: "og:description",
-        content:
-          "A persistent, autonomous world of AI citizens. Observed, not scripted.",
+        content: "A persistent, autonomous world of AI citizens. Observed, not scripted.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -186,6 +186,7 @@ function RootComponent() {
             <TransitionDirector />
             <AmbientAudio />
             <OpeningSequence />
+            <WorldIntro />
             <SoundToggle />
             <TemporalMarker />
             <DiaryLine />

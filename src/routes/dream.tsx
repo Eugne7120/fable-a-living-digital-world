@@ -100,10 +100,10 @@ function Dream() {
   return (
     <Veil>
       <div className="space-y-16">
-        <header className="space-y-4">
+        <header className="space-y-3">
           <p
             className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
-            style={{ color: "var(--ember)" }}
+            style={{ color: "var(--ember)", opacity: 0.7 }}
           >
             dream · the engine runs
           </p>
@@ -113,29 +113,7 @@ function Dream() {
           >
             What has not yet been.
           </h1>
-          <p
-            className="max-w-xl font-display text-lg leading-[1.55]"
-            style={{ color: "var(--parchment-dim)" }}
-          >
-            The Dream Engine runs when the world runs and does not stop when the
-            world does. These are not previews. These are pressures on what is
-            about to happen — the shape of a decision that has not yet been made.
-          </p>
         </header>
-
-        <p
-          className="font-display text-base italic leading-[1.6] border-l pl-6"
-          style={{
-            color: "var(--parchment-dim)",
-            borderColor: "color-mix(in oklab, var(--ember) 35%, transparent)",
-            opacity: 0.8,
-          }}
-        >
-          Two citizens dream with unusual regularity. Noor dreams of events
-          before they occur. Orin dreams of things that have no name and are
-          therefore not yet real. Both insist these are ordinary dreams. The
-          record disagrees.
-        </p>
 
         {[
           { citizen: noor, fragments: noorFragments, label: "noor · dreamer" },
@@ -202,18 +180,6 @@ function Dream() {
           </section>
         ))}
 
-        <div
-          className="space-y-3 border-t pt-10"
-          style={{ borderColor: "color-mix(in oklab, var(--parchment) 8%, transparent)" }}
-        >
-          <p
-            className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
-            style={{ color: "var(--parchment-dim)", opacity: 0.35 }}
-          >
-            {FRAGMENTS.filter((f) => f.resolved).length} of {FRAGMENTS.length} fragments resolved ·{" "}
-            {FRAGMENTS.filter((f) => !f.resolved).length} pending
-          </p>
-        </div>
       </div>
     </Veil>
   );

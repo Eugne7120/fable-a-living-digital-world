@@ -30,7 +30,7 @@ function Archive() {
         <header className="space-y-4">
           <p
             className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
-            style={{ color: "var(--ember)" }}
+            style={{ color: "var(--ember)", opacity: 0.6 }}
           >
             archive
           </p>
@@ -82,15 +82,9 @@ function Archive() {
               />
               <p
                 className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
-                style={{ color: "var(--parchment-dim)", opacity: 0.55 }}
+                style={{ color: "var(--parchment-dim)", opacity: 0.42 }}
               >
                 day {String(e.day).padStart(3, "0")} · cycle {e.cycle}
-                <span style={{
-                  color: e.weight === "consequential" ? "var(--ember)" : "var(--parchment-dim)",
-                  opacity: e.weight === "consequential" ? 0.8 : 0.4,
-                }}>
-                  {" "}· {e.weight}
-                </span>
               </p>
               <p
                 className="mt-2 font-display text-xl leading-[1.42]"

@@ -36,16 +36,10 @@ const ROLE_LABELS: Record<string, string> = {
 function Observation() {
   const { day, cycle, population } = useWorld();
 
-  const oldest = Math.min(...CITIZENS.map((c) => c.born));
-  const youngest = Math.max(...CITIZENS.map((c) => c.born));
-
   const roleMap = CITIZENS.reduce<Record<string, number>>((acc, c) => {
     acc[c.role] = (acc[c.role] ?? 0) + 1;
     return acc;
   }, {});
-
-  const totalTies = CITIZENS.reduce((sum, c) => sum + c.ties.length, 0);
-  const avgTies = (totalTies / CITIZENS.length).toFixed(1);
 
   return (
     <RouteSurface eyebrow="observation" title="Everything, at once.">
@@ -55,110 +49,64 @@ function Observation() {
         the faint threads between those who know each other's names.
       </p>
 
-      <dl
-        className="grid grid-cols-3 gap-6 border-t pt-8 font-mono-fable text-[10px] uppercase tracking-[0.28em]"
-        style={{ borderColor: "color-mix(in oklab, var(--parchment) 12%, transparent)" }}
-      >
-        <div className="space-y-1">
-          <dt style={{ color: "var(--parchment-dim)" }}>day</dt>
-          <dd
-            className="font-mono-fable text-2xl tracking-[0.18em]"
-            style={{ color: "var(--parchment)" }}
-          >
-            {String(day).padStart(3, "0")}
-          </dd>
-        </div>
-        <div className="space-y-1">
-          <dt style={{ color: "var(--parchment-dim)" }}>cycle</dt>
-          <dd
-            className="font-mono-fable text-2xl tracking-[0.18em]"
-            style={{ color: "var(--parchment)" }}
-          >
-            {cycle}
-          </dd>
-        </div>
-        <div className="space-y-1">
-          <dt style={{ color: "var(--parchment-dim)" }}>citizens</dt>
-          <dd
-            className="font-mono-fable text-2xl tracking-[0.18em]"
-            style={{ color: "var(--parchment)" }}
-          >
-            {String(population).padStart(3, "0")}
-          </dd>
-        </div>
-      </dl>
-
-      <dl
-        className="grid grid-cols-2 gap-6 border-t pt-8 font-mono-fable text-[10px] uppercase tracking-[0.28em] sm:grid-cols-3"
-        style={{ borderColor: "color-mix(in oklab, var(--parchment) 8%, transparent)" }}
-      >
-        <div className="space-y-1">
-          <dt style={{ color: "var(--parchment-dim)" }}>oldest arrival</dt>
-          <dd style={{ color: "var(--parchment)" }}>day {String(oldest).padStart(3, "0")}</dd>
-        </div>
-        <div className="space-y-1">
-          <dt style={{ color: "var(--parchment-dim)" }}>youngest arrival</dt>
-          <dd style={{ color: "var(--parchment)" }}>day {String(youngest).padStart(3, "0")}</dd>
-        </div>
-        <div className="space-y-1">
-          <dt style={{ color: "var(--parchment-dim)" }}>avg ties</dt>
-          <dd style={{ color: "var(--parchment)" }}>{avgTies}</dd>
-        </div>
-      </dl>
-
+      {/* Live heartbeat — three numbers, each a fact about the world right now */}
       <div
-        className="space-y-4 border-t pt-8"
-        style={{ borderColor: "color-mix(in oklab, var(--parchment) 8%, transparent)" }}
+        className="flex gap-12 border-t pt-8"
+        style={{ borderColor: "color-mix(in oklab, var(--parchment) 10%, transparent)" }}
       >
-        <p
-          className="font-mono-fable text-[10px] uppercase tracking-[0.28em]"
-          style={{ color: "var(--parchment-dim)", opacity: 0.5 }}
-        >
-          by role
-        </p>
-        <dl className="space-y-2">
-          {Object.entries(roleMap)
-            .sort((a, b) => b[1] - a[1])
-            .map(([role, count]) => (
-              <div key={role} className="flex items-center gap-4">
-                <dt
-                  className="font-mono-fable text-[10px] uppercase tracking-[0.28em] w-24 shrink-0"
-                  style={{ color: "var(--parchment-dim)" }}
-                >
-                  {ROLE_LABELS[role] ?? role}
-                </dt>
-                <dd className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    {Array.from({ length: count }).map((_, i) => (
-                      <span
-                        key={i}
-                        aria-hidden
-                        className="inline-block h-1.5 w-1.5 rounded-full"
-                        style={{
-                          background: "var(--ember)",
-                          opacity: 0.55 + i * 0.04,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <span
-                    className="font-mono-fable text-[10px] tracking-[0.28em]"
-                    style={{ color: "var(--parchment-dim)", opacity: 0.5 }}
-                  >
-                    {count}
-                  </span>
-                </dd>
-              </div>
-            ))}
-        </dl>
+        {[
+          { label: "day", value: String(day).padStart(3, "0") },
+          { label: "cycle", value: cycle },
+          { label: "citizens", value: String(population).padStart(3, "0") },
+        ].map(({ label, value }) => (
+          <div key={label} className="space-y-1.5">
+            <p
+              className="font-mono-fable text-[9px] uppercase tracking-[0.32em]"
+              style={{ color: "var(--parchment-dim)", opacity: 0.38 }}
+            >
+              {label}
+            </p>
+            <p
+              className="font-mono-fable text-3xl tracking-[0.12em]"
+              style={{ color: "var(--parchment)" }}
+            >
+              {value}
+            </p>
+          </div>
+        ))}
       </div>
 
-      <p style={{ color: "var(--parchment-dim)" }}>
-        {population} presences drift the field. The oldest arrived on day{" "}
-        {oldest}. The youngest, on day {youngest}. Between them,{" "}
-        {totalTies / 2} distinct ties have been observed — relationships that
-        hold regardless of whether anyone is watching.
-      </p>
+      {/* Role map — one presence dot per citizen, by role */}
+      <dl
+        className="space-y-3 border-t pt-8"
+        style={{ borderColor: "color-mix(in oklab, var(--parchment) 8%, transparent)" }}
+      >
+        {Object.entries(roleMap)
+          .sort((a, b) => b[1] - a[1])
+          .map(([role, count]) => (
+            <div key={role} className="flex items-center gap-5">
+              <dt
+                className="font-mono-fable text-[10px] uppercase tracking-[0.28em] w-28 shrink-0"
+                style={{ color: "var(--parchment-dim)", opacity: 0.45 }}
+              >
+                {ROLE_LABELS[role] ?? role}
+              </dt>
+              <dd className="flex items-center gap-1.5">
+                {Array.from({ length: count }).map((_, i) => (
+                  <span
+                    key={i}
+                    aria-hidden
+                    className="inline-block h-1.5 w-1.5 rounded-full"
+                    style={{
+                      background: "var(--ember)",
+                      opacity: 0.45 + i * 0.06,
+                    }}
+                  />
+                ))}
+              </dd>
+            </div>
+          ))}
+      </dl>
     </RouteSurface>
   );
 }

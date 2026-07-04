@@ -118,46 +118,9 @@ function Library() {
             style={{ color: "var(--parchment-dim)" }}
           >
             Nothing here was commissioned. Nothing was asked for. The world
-            makes what it makes, and the record keeps what the record keeps.
+            makes what it makes.
           </p>
         </header>
-
-        <div className="grid grid-cols-3 gap-px border"
-          style={{
-            backgroundColor: "color-mix(in oklab, var(--parchment) 8%, transparent)",
-            borderColor: "color-mix(in oklab, var(--parchment) 10%, transparent)",
-          }}
-        >
-          {(["vessel", "song", "color", "story", "word", "mark"] as Artifact["kind"][]).map((kind) => {
-            const count = ARTIFACTS.filter((a) => a.kind === kind).length;
-            return (
-              <div
-                key={kind}
-                className="p-4 text-center space-y-1"
-                style={{ backgroundColor: "color-mix(in oklab, var(--ink) 88%, transparent)" }}
-              >
-                <p
-                  className="font-mono-fable text-base leading-none"
-                  style={{ color: "var(--ember)", opacity: 0.7 }}
-                >
-                  {KIND_MARKS[kind]}
-                </p>
-                <p
-                  className="font-mono-fable text-[10px] uppercase tracking-[0.28em]"
-                  style={{ color: count > 0 ? "var(--parchment)" : "var(--parchment-dim)", opacity: count > 0 ? 1 : 0.4 }}
-                >
-                  {count > 0 ? count : "—"}
-                </p>
-                <p
-                  className="font-mono-fable text-[9px] uppercase tracking-[0.24em]"
-                  style={{ color: "var(--parchment-dim)", opacity: 0.4 }}
-                >
-                  {KIND_LABELS[kind]}
-                </p>
-              </div>
-            );
-          })}
-        </div>
 
         <ul>
           {ARTIFACTS.map((a) => (

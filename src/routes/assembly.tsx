@@ -35,7 +35,7 @@ const STATUS_LABELS: Record<Proposal["status"], string> = {
   withdrawn: "withdrawn",
 };
 
-function ProposalEntry({ p }: { p: Proposal }) {
+function ProposalEntry({ p, dim = false }: { p: Proposal; dim?: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const isOpen = p.status === "open";
 
@@ -55,20 +55,20 @@ function ProposalEntry({ p }: { p: Proposal }) {
             </p>
             <span
               className="font-mono-fable text-[10px] uppercase tracking-[0.28em]"
-              style={{ color: "var(--parchment-dim)", opacity: 0.5 }}
+              style={{ color: "var(--parchment-dim)", opacity: 0.38 }}
             >
-              · day {String(p.day).padStart(3, "0")} · {p.weight}
+              · day {String(p.day).padStart(3, "0")}
             </span>
           </div>
           <h2
             className="font-display text-2xl leading-[1.2]"
-            style={{ color: "var(--parchment)" }}
+            style={{ color: "var(--parchment)", opacity: dim ? 0.62 : 1 }}
           >
             {p.title}
           </h2>
           <p
             className="font-display text-base leading-[1.55] italic"
-            style={{ color: "var(--parchment-dim)" }}
+            style={{ color: "var(--parchment-dim)", opacity: dim ? 0.55 : 1 }}
           >
             {p.text}
           </p>
@@ -124,14 +124,19 @@ function ProposalEntry({ p }: { p: Proposal }) {
             type="button"
             onClick={() => setExpanded((v) => !v)}
             className="font-mono-fable text-[10px] uppercase tracking-[0.28em] drift"
-            style={{ color: "var(--parchment-dim)", opacity: expanded ? 0.8 : 0.45 }}
+            aria-expanded={expanded}
+            style={{
+              color: "var(--parchment-dim)",
+              opacity: expanded ? 0.7 : 0.28,
+              letterSpacing: "0.4em",
+            }}
           >
-            {expanded ? "close note" : "assembly note ↓"}
+            ···
           </button>
           {expanded && (
             <p
-              className="mt-2 font-display text-base leading-[1.55]"
-              style={{ color: "var(--parchment-dim)" }}
+              className="mt-3 font-display text-base leading-[1.58] italic"
+              style={{ color: "var(--parchment-dim)", opacity: 0.75 }}
             >
               {p.notes}
             </p>
@@ -241,7 +246,7 @@ function Assembly() {
             </p>
             <ul>
               {closedProposals.map((p) => (
-                <ProposalEntry key={p.id} p={p} />
+                <ProposalEntry key={p.id} p={p} dim />
               ))}
             </ul>
           </section>

@@ -149,10 +149,10 @@ function Population() {
   return (
     <Veil>
       <div className="space-y-12">
-        <header className="space-y-4">
+        <header className="space-y-3">
           <p
             className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
-            style={{ color: "var(--ember)" }}
+            style={{ color: "var(--ember)", opacity: 0.7 }}
           >
             population · {String(CITIZENS.length).padStart(3, "0")}
           </p>
@@ -162,13 +162,6 @@ function Population() {
           >
             Those who are here.
           </h1>
-          <p
-            className="max-w-xl font-display text-lg leading-[1.55]"
-            style={{ color: "var(--parchment-dim)" }}
-          >
-            Not characters. Not avatars. Twelve reasoning presences who have,
-            between them, decided the shape of this world so far.
-          </p>
         </header>
 
         <ul

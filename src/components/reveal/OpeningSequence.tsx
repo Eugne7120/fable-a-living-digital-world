@@ -53,8 +53,7 @@ export function OpeningSequence() {
                 width: "80px",
                 height: "80px",
                 background: "radial-gradient(circle, color-mix(in oklab, var(--ember) 18%, transparent) 0%, transparent 70%)",
-                animation: beat >= 1 ? "fable-breath 6s cubic-bezier(0.4, 0, 0.2, 1) infinite" : "none",
-                animationDelay: "0.3s",
+                animation: beat >= 1 ? "fable-breath 6s 0.3s cubic-bezier(0.4, 0, 0.2, 1) infinite" : "none",
               }}
             />
             {/* Inner halo */}
@@ -76,8 +75,7 @@ export function OpeningSequence() {
                 background: "var(--ember)",
                 boxShadow:
                   "0 0 20px color-mix(in oklab, var(--ember) 70%, transparent), 0 0 60px color-mix(in oklab, var(--ember) 35%, transparent)",
-                animation: beat >= 1 ? "fable-breath 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite" : "none",
-                animationDelay: "0.15s",
+                animation: beat >= 1 ? "fable-breath 4.2s 0.15s cubic-bezier(0.4, 0, 0.2, 1) infinite" : "none",
               }}
             />
           </motion.div>

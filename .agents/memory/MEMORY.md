@@ -1,0 +1,1 @@
+- [FABLE craft decisions](fable-craft-decisions.md) — prose/UI audit rules and district-by-district decisions for the CD pass

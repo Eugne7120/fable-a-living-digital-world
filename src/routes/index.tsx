@@ -1,24 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+// The Field — the landing state of the world.
+//
+// There is no surface content here. The persistent world (canvas, diary,
+// ticker, temporal marker, district marks) is what the visitor arrives into.
+// The opening reveal delays every readable element until curiosity is earned.
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: Field,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+function Field() {
+  // A tall spacer so scroll behavior on mobile does not push the viewport.
+  // All visible content lives in the persistent root shell.
+  return <div aria-hidden className="min-h-svh" />;
 }

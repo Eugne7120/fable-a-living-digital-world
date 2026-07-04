@@ -9,8 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ObserveRouteImport } from './routes/observe'
+import { Route as LibraryRouteImport } from './routes/library'
+import { Route as GenesisRouteImport } from './routes/genesis'
+import { Route as DreamRouteImport } from './routes/dream'
+import { Route as CitizensRouteImport } from './routes/citizens'
+import { Route as AssemblyRouteImport } from './routes/assembly'
+import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ObserveRoute = ObserveRouteImport.update({
+  id: '/observe',
+  path: '/observe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GenesisRoute = GenesisRouteImport.update({
+  id: '/genesis',
+  path: '/genesis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DreamRoute = DreamRouteImport.update({
+  id: '/dream',
+  path: '/dream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CitizensRoute = CitizensRouteImport.update({
+  id: '/citizens',
+  path: '/citizens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssemblyRoute = AssemblyRouteImport.update({
+  id: '/assembly',
+  path: '/assembly',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchiveRoute = ArchiveRouteImport.update({
+  id: '/archive',
+  path: '/archive',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +61,130 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
+  '/assembly': typeof AssemblyRoute
+  '/citizens': typeof CitizensRoute
+  '/dream': typeof DreamRoute
+  '/genesis': typeof GenesisRoute
+  '/library': typeof LibraryRoute
+  '/observe': typeof ObserveRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
+  '/assembly': typeof AssemblyRoute
+  '/citizens': typeof CitizensRoute
+  '/dream': typeof DreamRoute
+  '/genesis': typeof GenesisRoute
+  '/library': typeof LibraryRoute
+  '/observe': typeof ObserveRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
+  '/assembly': typeof AssemblyRoute
+  '/citizens': typeof CitizensRoute
+  '/dream': typeof DreamRoute
+  '/genesis': typeof GenesisRoute
+  '/library': typeof LibraryRoute
+  '/observe': typeof ObserveRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/archive'
+    | '/assembly'
+    | '/citizens'
+    | '/dream'
+    | '/genesis'
+    | '/library'
+    | '/observe'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/archive'
+    | '/assembly'
+    | '/citizens'
+    | '/dream'
+    | '/genesis'
+    | '/library'
+    | '/observe'
+  id:
+    | '__root__'
+    | '/'
+    | '/archive'
+    | '/assembly'
+    | '/citizens'
+    | '/dream'
+    | '/genesis'
+    | '/library'
+    | '/observe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchiveRoute: typeof ArchiveRoute
+  AssemblyRoute: typeof AssemblyRoute
+  CitizensRoute: typeof CitizensRoute
+  DreamRoute: typeof DreamRoute
+  GenesisRoute: typeof GenesisRoute
+  LibraryRoute: typeof LibraryRoute
+  ObserveRoute: typeof ObserveRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/observe': {
+      id: '/observe'
+      path: '/observe'
+      fullPath: '/observe'
+      preLoaderRoute: typeof ObserveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/genesis': {
+      id: '/genesis'
+      path: '/genesis'
+      fullPath: '/genesis'
+      preLoaderRoute: typeof GenesisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dream': {
+      id: '/dream'
+      path: '/dream'
+      fullPath: '/dream'
+      preLoaderRoute: typeof DreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/citizens': {
+      id: '/citizens'
+      path: '/citizens'
+      fullPath: '/citizens'
+      preLoaderRoute: typeof CitizensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assembly': {
+      id: '/assembly'
+      path: '/assembly'
+      fullPath: '/assembly'
+      preLoaderRoute: typeof AssemblyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/archive': {
+      id: '/archive'
+      path: '/archive'
+      fullPath: '/archive'
+      preLoaderRoute: typeof ArchiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +197,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchiveRoute: ArchiveRoute,
+  AssemblyRoute: AssemblyRoute,
+  CitizensRoute: CitizensRoute,
+  DreamRoute: DreamRoute,
+  GenesisRoute: GenesisRoute,
+  LibraryRoute: LibraryRoute,
+  ObserveRoute: ObserveRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

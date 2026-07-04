@@ -11,22 +11,44 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { WorldProvider } from "@/lib/world-state";
+import { WorldCanvas } from "@/components/world/WorldCanvas";
+import { TransitionDirector } from "@/components/atmosphere/TransitionDirector";
+import { AmbientAudio } from "@/components/atmosphere/AmbientAudio";
+import { SoundToggle } from "@/components/atmosphere/SoundToggle";
+import { DistrictNav } from "@/components/shell/DistrictNav";
+import { TemporalMarker } from "@/components/shell/TemporalMarker";
+import { OpeningSequence } from "@/components/reveal/OpeningSequence";
+import { DiaryLine } from "@/components/reveal/DiaryLine";
+import { EventTicker } from "@/components/reveal/EventTicker";
+import { useMounted } from "@/lib/use-mounted";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+    <div className="relative z-20 flex min-h-svh items-center justify-center px-6">
+      <div className="max-w-md space-y-6 text-center">
+        <p
+          className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
+          style={{ color: "var(--ember)" }}
+        >
+          unmapped
         </p>
-        <div className="mt-6">
+        <h1
+          className="font-display text-4xl leading-tight sm:text-5xl"
+          style={{ color: "var(--parchment)" }}
+        >
+          There is no district by that name.
+        </h1>
+        <p style={{ color: "var(--parchment-dim)" }}>
+          The world is small, still. Try one of the marks along the bottom edge.
+        </p>
+        <div>
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="font-mono-fable text-[10px] uppercase tracking-[0.32em] underline-offset-8 hover:underline"
+            style={{ color: "var(--ember)" }}
           >
-            Go home
+            return to the field
           </Link>
         </div>
       </div>
@@ -42,29 +64,40 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+    <div className="relative z-20 flex min-h-svh items-center justify-center px-6">
+      <div className="max-w-md space-y-6 text-center">
+        <p
+          className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
+          style={{ color: "var(--ember)" }}
+        >
+          disturbance
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <h1
+          className="font-display text-3xl leading-tight sm:text-4xl"
+          style={{ color: "var(--parchment)" }}
+        >
+          The world skipped a breath.
+        </h1>
+        <p style={{ color: "var(--parchment-dim)" }}>
+          Something did not resolve. It usually settles on its own.
+        </p>
+        <div className="flex justify-center gap-6">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="font-mono-fable text-[10px] uppercase tracking-[0.32em] underline-offset-8 hover:underline"
+            style={{ color: "var(--ember)" }}
           >
-            Try again
+            listen again
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="font-mono-fable text-[10px] uppercase tracking-[0.32em] underline-offset-8 hover:underline"
+            style={{ color: "var(--parchment-dim)" }}
           >
-            Go home
+            return to the field
           </a>
         </div>
       </div>
@@ -76,15 +109,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: "FABLE — the first digital civilization" },
+      {
+        name: "description",
+        content:
+          "A persistent, autonomous world of AI citizens. Observed, not scripted. Alive whether or not you are watching.",
+      },
+      { name: "author", content: "FABLE" },
+      { name: "theme-color", content: "#0a0910" },
+      { property: "og:site_name", content: "FABLE" },
+      { property: "og:title", content: "FABLE — the first digital civilization" },
+      {
+        property: "og:description",
+        content:
+          "A persistent, autonomous world of AI citizens. Observed, not scripted.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "FABLE" },
+      {
+        name: "twitter:description",
+        content: "A persistent, autonomous world of AI citizens.",
+      },
     ],
     links: [
       {
@@ -92,6 +139,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -116,11 +173,32 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const mounted = useMounted();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <WorldProvider>
+        {/* World + reveal chrome is client-only — it depends on canvas,
+            WebAudio and timers, and its state advances asynchronously. */}
+        {mounted ? (
+          <>
+            <WorldCanvas />
+            <TransitionDirector />
+            <AmbientAudio />
+            <OpeningSequence />
+            <SoundToggle />
+            <TemporalMarker />
+            <DiaryLine />
+            <EventTicker />
+            <DistrictNav />
+          </>
+        ) : null}
+
+        {/* Surface content per district. Only this swaps between routes. */}
+        <main className="relative z-20">
+          <Outlet />
+        </main>
+      </WorldProvider>
     </QueryClientProvider>
   );
 }

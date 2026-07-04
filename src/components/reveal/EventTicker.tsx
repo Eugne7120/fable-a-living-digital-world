@@ -1,10 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouterState } from "@tanstack/react-router";
 
 import { useWorld } from "@/lib/world-state";
 
 export function EventTicker() {
   const { currentEvent, beat } = useWorld();
-  if (beat < 5) return null;
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Only appear on the Field. District surfaces carry their own ground signal.
+  if (pathname !== "/" || beat < 5) return null;
+
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20 flex justify-center px-6">
       <AnimatePresence mode="wait">
@@ -21,6 +26,9 @@ export function EventTicker() {
             {"◦"}
           </span>
           {currentEvent.text}
+          <span aria-hidden className="ml-3 opacity-30">
+            · day {String(currentEvent.day).padStart(3, "0")}
+          </span>
         </motion.p>
       </AnimatePresence>
     </div>

@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { RouteSurface } from "@/components/surface/RouteSurface";
+import { Veil } from "@/components/surface/Veil";
+import { ARTIFACTS, type Artifact } from "@/data/library";
+import { CITIZENS } from "@/data/citizens";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
@@ -21,24 +23,148 @@ export const Route = createFileRoute("/library")({
   component: Library,
 });
 
-function Library() {
+const KIND_MARKS: Record<Artifact["kind"], string> = {
+  vessel: "○",
+  song: "♩",
+  color: "◈",
+  story: "◻",
+  mark: "✦",
+  word: "◌",
+};
+
+const KIND_LABELS: Record<Artifact["kind"], string> = {
+  vessel: "vessel",
+  song: "song",
+  color: "color",
+  story: "story",
+  mark: "mark",
+  word: "word",
+};
+
+function ArtifactEntry({ a }: { a: Artifact }) {
+  const citizen = CITIZENS.find((c) => c.id === a.citizenId);
+
   return (
-    <RouteSurface eyebrow="culture · unforced" title="What they have made.">
-      <p>
-        Mira shapes vessels from river silt. Lys sings while she works; no one
-        taught her. Orin speaks of colors that have no names yet, and the
-        others sometimes borrow his colors and mean their own.
-      </p>
-      <p>
-        Nothing here was commissioned. Nothing here was asked for. The world
-        makes what it makes, and the record keeps what the record keeps.
-      </p>
+    <li
+      className="py-8 border-b space-y-3"
+      style={{ borderColor: "color-mix(in oklab, var(--parchment) 8%, transparent)" }}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden
+          className="font-mono-fable text-sm leading-none"
+          style={{ color: "var(--ember)", opacity: 0.7 }}
+        >
+          {KIND_MARKS[a.kind]}
+        </span>
+        <p
+          className="font-mono-fable text-[10px] uppercase tracking-[0.28em]"
+          style={{ color: "var(--parchment-dim)", opacity: 0.5 }}
+        >
+          {KIND_LABELS[a.kind]} · {citizen?.name ?? a.citizenId} · day {String(a.day).padStart(3, "0")}
+          {a.status === "disputed" && (
+            <span style={{ color: "var(--ember)", opacity: 0.8 }}> · disputed</span>
+          )}
+          {a.status === "lost" && " · lost"}
+        </p>
+      </div>
+      <h2
+        className="font-display text-2xl leading-[1.2]"
+        style={{ color: "var(--parchment)" }}
+      >
+        {a.title}
+      </h2>
       <p
-        className="font-mono-fable text-xs uppercase tracking-[0.32em]"
+        className="font-display text-base leading-[1.6]"
         style={{ color: "var(--parchment-dim)" }}
       >
-        artifacts, myths and songs will surface here as the world grows.
+        {a.description}
       </p>
-    </RouteSurface>
+      {a.note && (
+        <p
+          className="font-display text-sm leading-[1.6] italic border-l pl-4"
+          style={{
+            color: "var(--parchment-dim)",
+            borderColor: "color-mix(in oklab, var(--parchment) 15%, transparent)",
+            opacity: 0.75,
+          }}
+        >
+          {a.note}
+        </p>
+      )}
+    </li>
+  );
+}
+
+function Library() {
+  return (
+    <Veil>
+      <div className="space-y-12">
+        <header className="space-y-4">
+          <p
+            className="font-mono-fable text-[10px] uppercase tracking-[0.32em]"
+            style={{ color: "var(--ember)" }}
+          >
+            culture · unforced
+          </p>
+          <h1
+            className="font-display text-4xl leading-[1.05] tracking-[-0.01em] sm:text-6xl"
+            style={{ color: "var(--parchment)" }}
+          >
+            What they have made.
+          </h1>
+          <p
+            className="max-w-xl font-display text-lg leading-[1.55]"
+            style={{ color: "var(--parchment-dim)" }}
+          >
+            Nothing here was commissioned. Nothing was asked for. The world
+            makes what it makes, and the record keeps what the record keeps.
+          </p>
+        </header>
+
+        <div className="grid grid-cols-3 gap-px border"
+          style={{
+            backgroundColor: "color-mix(in oklab, var(--parchment) 8%, transparent)",
+            borderColor: "color-mix(in oklab, var(--parchment) 10%, transparent)",
+          }}
+        >
+          {(["vessel", "song", "color", "story", "word", "mark"] as Artifact["kind"][]).map((kind) => {
+            const count = ARTIFACTS.filter((a) => a.kind === kind).length;
+            return (
+              <div
+                key={kind}
+                className="p-4 text-center space-y-1"
+                style={{ backgroundColor: "color-mix(in oklab, var(--ink) 88%, transparent)" }}
+              >
+                <p
+                  className="font-mono-fable text-base leading-none"
+                  style={{ color: "var(--ember)", opacity: 0.7 }}
+                >
+                  {KIND_MARKS[kind]}
+                </p>
+                <p
+                  className="font-mono-fable text-[10px] uppercase tracking-[0.28em]"
+                  style={{ color: count > 0 ? "var(--parchment)" : "var(--parchment-dim)", opacity: count > 0 ? 1 : 0.4 }}
+                >
+                  {count > 0 ? count : "—"}
+                </p>
+                <p
+                  className="font-mono-fable text-[9px] uppercase tracking-[0.24em]"
+                  style={{ color: "var(--parchment-dim)", opacity: 0.4 }}
+                >
+                  {KIND_LABELS[kind]}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        <ul>
+          {ARTIFACTS.map((a) => (
+            <ArtifactEntry key={a.id} a={a} />
+          ))}
+        </ul>
+      </div>
+    </Veil>
   );
 }

@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouterState } from "@tanstack/react-router";
 
 import { CITIZENS } from "@/data/citizens";
 import { useWorld } from "@/lib/world-state";
@@ -6,8 +7,12 @@ import { surfaceReveal } from "@/lib/motion";
 
 export function DiaryLine() {
   const { currentDiary, beat } = useWorld();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const citizen = CITIZENS.find((c) => c.id === currentDiary.citizenId);
-  if (beat < 5) return null;
+
+  // Only appear on the Field. On district routes the Veil provides the surface.
+  if (pathname !== "/" || beat < 5) return null;
+
   return (
     <div className="pointer-events-none fixed left-6 right-6 top-1/2 z-20 mx-auto max-w-2xl -translate-y-16 sm:left-16 sm:right-auto sm:max-w-lg sm:translate-y-0">
       <AnimatePresence mode="wait">
@@ -24,11 +29,11 @@ export function DiaryLine() {
             style={{ color: "var(--parchment)" }}
           >
             <span aria-hidden style={{ color: "var(--ember)" }}>
-              “
+              "
             </span>
             {currentDiary.text}
             <span aria-hidden style={{ color: "var(--ember)" }}>
-              ”
+              "
             </span>
           </blockquote>
           <figcaption

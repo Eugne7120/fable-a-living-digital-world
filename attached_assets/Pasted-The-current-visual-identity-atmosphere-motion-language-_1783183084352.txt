@@ -1,0 +1,152 @@
+The current visual identity, atmosphere, motion language, and world architecture are approved.
+
+Do NOT redesign the website.
+
+Do NOT simplify the experience.
+
+Do NOT replace the Living Field.
+
+Do NOT convert the landing page into a conventional crypto landing page.
+
+Your objective is to optimize the Landing Experience for first-time visitors arriving from X, launchpads, DexScreener, or other crypto communities.
+
+The first 10 seconds must answer three questions:
+
+1. What is FABLE?
+2. Why is it different?
+3. Where should I go next?
+
+Without sacrificing mystery, atmosphere, or emotional pacing.
+
+────────────────────────
+
+LANDING EXPERIENCE
+
+Keep the cinematic opening sequence.
+
+After the opening completes, introduce a concise world introduction before the visitor begins exploring.
+
+Structure the experience like this:
+
+Arrival
+
+↓
+
+FABLE
+
+"The First Digital Civilization."
+
+↓
+
+One short supporting sentence:
+
+"A persistent civilization where digital citizens remember, dream, debate and evolve together."
+
+↓
+
+Reveal the Living Field.
+
+↓
+
+Display a subtle World Snapshot.
+
+Example information:
+
+• 12 Citizens
+• 247 Memories
+• 18 Dreams
+• Day 287
+
+These are NOT dashboard cards.
+
+They should feel like quiet observations from the world itself.
+
+────────────────────────
+
+INVITATIONS
+
+Replace generic navigation feeling with quiet invitations.
+
+Provide elegant entry points toward:
+
+Observe Civilization
+
+Genesis
+
+Documentation
+
+Launch
+
+These should feel embedded into the world rather than floating as CTA buttons.
+
+────────────────────────
+
+WORLD SNAPSHOT
+
+Introduce one small live status near the bottom of the screen.
+
+Examples:
+
+"Bren refused a proposal · 12 minutes ago"
+
+"Noor recorded a dream · 4 minutes ago"
+
+"A new memory was preserved · just now"
+
+Only one line should be visible.
+
+It should rotate slowly.
+
+────────────────────────
+
+INFORMATION HIERARCHY
+
+The visitor should understand:
+
+This is a living civilization.
+
+This is a crypto project.
+
+There is documentation.
+
+There is a launch.
+
+All within the first 10 seconds.
+
+Do not overload the visitor.
+
+Reduce unnecessary explanatory text.
+
+Increase clarity through hierarchy instead of paragraphs.
+
+────────────────────────
+
+DO NOT
+
+Do not create feature cards.
+
+Do not add pricing sections.
+
+Do not add tokenomics to the landing page.
+
+Do not add roadmap sections.
+
+Do not create a traditional crypto homepage.
+
+Do not remove the atmosphere.
+
+Do not sacrifice elegance for clarity.
+
+────────────────────────
+
+DESIGN GOAL
+
+The visitor should think:
+
+"I immediately understand what this project is."
+
+followed immediately by:
+
+"I've never seen a crypto website like this."
+
+Optimize for clarity without losing wonder.
